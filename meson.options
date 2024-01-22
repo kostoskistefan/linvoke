@@ -1,0 +1,1 @@
+option('compile_examples', type: 'boolean', value: false, description: 'Whether to compile the example projects included with linvoke')
