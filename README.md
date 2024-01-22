@@ -1,6 +1,6 @@
 # Linvoke
 
-<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge"/ height="25px"></a>
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 **Linvoke** is a lightweight C library that provides a simple observer pattern implementation. It allows users to register custom events, connect multiple callbacks (nodes) to these events, and emit events with optional user data.
 
@@ -15,6 +15,7 @@ An example **_hello world_** project can be found in the `examples` directory. T
  * Emitting events
 
 To build the example project, see step 2 in the [build instructions](#build-instructions).
+
 To run the example project, run the following command: `./build/linvoke-hello-world`
 
 ## Build Instructions
