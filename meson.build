@@ -43,7 +43,7 @@ cmocka_dep = dependency('cmocka')
 
 test('linvoke_test',
   executable(
-    'linvoke_test',
+    'linvoke-test',
     'test/test.c',
     dependencies: [linvoke_dep, cmocka_dep],
   )

@@ -14,68 +14,74 @@
 
 #include <stdint.h>
 
-#ifndef LINVOKE_EVENT_CAPACITY
-#define LINVOKE_EVENT_CAPACITY 8
-#endif 
-
-#ifndef LINVOKE_NODE_CAPACITY
-#define LINVOKE_NODE_CAPACITY  16
-#endif
-
-typedef struct linvoke_event_s linvoke_event_s;
 typedef struct linvoke_s linvoke_s;
+typedef struct linvoke_port_s linvoke_port_s;
+typedef struct linvoke_node_s linvoke_node_s;
+typedef struct linvoke_event_s linvoke_event_s;
 
 /**
- * @brief Creates a new linvoke
- * @return Pointer to the created linvoke
+ * @brief Creates a new linvoke object
+ * @return Pointer to the created linvoke object
  */
 linvoke_s *linvoke_create(void);
 
 /**
- * @brief Destroys a linvoke
+ * @brief Destroys a linvoke object
  * @param linvoke[in] Pointer to a linvoke object
  */
 void linvoke_destroy(linvoke_s *const linvoke);
 
 /**
- * @brief Registers an event
+ * @brief Registers a new port with a given ID
  * @param linvoke[in] Pointer to a linvoke object
- * @param event_id[in] The ID of the event that will be registered
+ * @param port_id[in] The ID of the port that will be registered
  */
-void linvoke_register_event(linvoke_s *const linvoke, uint32_t event_id);
+void linvoke_register_port(linvoke_s *const linvoke, uint32_t port_id);
 
 /**
- * @brief Connects a new node to an event. The callback functions will be called in the order they were connected
+ * @brief Connects a new node to an port. The callback functions will be called in the order they were connected
  * @param linvoke[in] Pointer to a linvoke object
- * @param event_id[in] The ID of the event to which the node will be connected
- * @param callback[in] The callback that will be called when the event is emitted
- * @param user_data[in] The user data that will be passed to the callback function
+ * @param port_id[in] The ID of the port to which the node will be connected
+ * @param callback[in] The callback function that will be called when an event is emitted from the port
+ * @param user_data[in] The user data that will be passed to the connected nodes
  */
 void linvoke_connect(
     linvoke_s *const linvoke,
-    const uint32_t event_id,
-    void (*const callback)(void *const user_data),
+    const uint32_t port_id,
+    void (*const callback)(linvoke_event_s *event),
     void *const user_data
 );
 
 /**
- * @brief Emits an event
+ * @brief Emits an event from a given port 
  * @param linvoke[in] Pointer to a linvoke object
- * @param event_id[in] The ID of the event which will be emitted
+ * @param port_id[in] The ID of the port which will emit an event
  */
-void linvoke_emit(linvoke_s *const linvoke, const uint32_t event_id);
+void linvoke_emit(linvoke_s *const linvoke, const uint32_t port_id);
 
 /**
-* @brief Get the number of registered events
+* @brief Get the number of registered ports
 * @param linvoke[in] Pointer to a linvoke object
-* @return The number of registered events
+* @return The number of registered ports
 */
-uint32_t linvoke_get_registered_event_count(linvoke_s *const linvoke);
+uint32_t linvoke_get_registered_port_count(linvoke_s *const linvoke);
 
 /**
-* @brief Get the number of nodes that are connected to an event 
+* @brief Get the number of nodes that are connected to a port with a given ID
 * @param linvoke[in] Pointer to a linvoke object
-* @param event_id[in] The ID of the event to which the nodes are be connected
-* @return The number of nodes connected to the event with id `event_id`
+* @param port_id[in] The ID of the port to which the nodes are connected
+* @return The number of nodes connected to the port
 */
-uint32_t linvoke_get_node_count(linvoke_s *const linvoke, const uint32_t event_id);
+uint32_t linvoke_get_node_count(linvoke_s *const linvoke, const uint32_t port_id);
+
+/**
+* @brief Get the ID of the port that emitted an event
+* @return The ID of the port that emitted an event
+*/
+uint32_t linvoke_event_get_port_id(linvoke_event_s *const event);
+
+/**
+* @brief Get the user data of the event
+* @return The user data of the event
+*/
+void *linvoke_event_get_user_data(linvoke_event_s *const event);

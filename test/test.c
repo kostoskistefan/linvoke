@@ -17,457 +17,501 @@
 #include <cmocka.h>
 #include <stdio.h>
 
-void mock_callback1(void *user_data)
+void mock_node1(linvoke_event_s *event)
 {
     function_called();
 }
 
-void mock_callback2(void *user_data)
+void mock_node2(linvoke_event_s *event)
 {
     function_called();
 }
 
-static void test_one_event_one_callback(void **state)
+void mock_node_with_data(linvoke_event_s *event)
+{
+    const uint32_t port_id = linvoke_event_get_port_id(event);
+    const char *data = *((const char **)linvoke_event_get_user_data(event));
+
+    // This mock node is only used for testing the data inside the event, and is only called
+    // by one function. Therefore, we can directly test the port_id and user data here.
+    assert_int_equal(port_id, 36);
+    assert_string_equal(data, "Some string data");
+    function_called();
+}
+
+static void test_one_port_one_node(void **state)
 {
     (void) state; // unused
 
     linvoke_s *linvoke = linvoke_create();
 
-    // There should be 0 event registered
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 0);
+    // There should be 0 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 0);
 
-    const uint32_t event_id = 0;
-    linvoke_register_event(linvoke, event_id);
+    const uint32_t port_id = 0;
+    linvoke_register_port(linvoke, port_id);
 
-    // There should be 1 event registered
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 1);
+    // There should be 1 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 1);
 
-    // The event should have 0 nodes connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event_id), 0);
+    // The port should have 0 nodes connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port_id), 0);
 
-    linvoke_connect(linvoke, event_id, mock_callback1, NULL);
+    linvoke_connect(linvoke, port_id, mock_node1, NULL);
 
-    // The event should have 1 node connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event_id), 1);
+    // The port should have 1 node connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port_id), 1);
 
-    // Since only 1 node is connected, when we emit the event, we expect only 1 callback
-    expect_function_calls(mock_callback1, 1);
+    // Since only 1 node is connected, when we emit the port, we expect only 1 node
+    expect_function_calls(mock_node1, 1);
 
-    linvoke_emit(linvoke, event_id);
+    linvoke_emit(linvoke, port_id);
 
     linvoke_destroy(linvoke);
 }
 
-static void test_one_event_multiple_same_callbacks(void **state)
+static void test_one_port_multiple_same_nodes(void **state)
 {
     (void) state; // unused
 
     linvoke_s *linvoke = linvoke_create();
 
-    // There should be 0 event registered
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 0);
+    // There should be 0 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 0);
 
-    const uint32_t event_id = 0;
-    linvoke_register_event(linvoke, event_id);
+    const uint32_t port_id = 0;
+    linvoke_register_port(linvoke, port_id);
 
-    // There should be 1 event registered
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 1);
+    // There should be 1 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 1);
 
-    // The event should have 0 nodes connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event_id), 0);
+    // The port should have 0 nodes connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port_id), 0);
 
-    linvoke_connect(linvoke, event_id, mock_callback1, NULL);
-    linvoke_connect(linvoke, event_id, mock_callback1, NULL); // This one will fail since it's already connected
+    linvoke_connect(linvoke, port_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port_id, mock_node1, NULL); // This one will fail since it's already connected
 
-    // The event should have 1 node connected, because the second linvoke_connect
-    // should not work, since the callback is already connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event_id), 1);
+    // The port should have 1 node connected, because the second linvoke_connect
+    // should not work, since the node is already connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port_id), 1);
 
-    // Since only 1 node is connected, when we emit the event, we expect only 1 callback
-    expect_function_calls(mock_callback1, 1);
+    // Since only 1 node is connected, when we emit the port, we expect only 1 node
+    expect_function_calls(mock_node1, 1);
 
-    linvoke_emit(linvoke, event_id);
+    linvoke_emit(linvoke, port_id);
 
     linvoke_destroy(linvoke);
 }
 
-static void test_one_event_multiple_different_callbacks(void **state)
+static void test_one_port_multiple_different_nodes(void **state)
 {
     (void) state; // unused
 
     linvoke_s *linvoke = linvoke_create();
 
-    // There should be 0 event registered
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 0);
+    // There should be 0 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 0);
 
-    const uint32_t event_id = 0;
-    linvoke_register_event(linvoke, event_id);
+    const uint32_t port_id = 0;
+    linvoke_register_port(linvoke, port_id);
 
-    // There should be 1 event registered
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 1);
+    // There should be 1 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 1);
 
-    // The event should have 0 nodes connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event_id), 0);
+    // The port should have 0 nodes connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port_id), 0);
 
-    linvoke_connect(linvoke, event_id, mock_callback1, NULL);
-    linvoke_connect(linvoke, event_id, mock_callback2, NULL);
+    linvoke_connect(linvoke, port_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port_id, mock_node2, NULL);
 
-    // The event should have 2 node connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event_id), 2);
+    // The port should have 2 node connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port_id), 2);
 
-    // The event has 2 callbacks, so we expect 2 callback functions to be called
-    expect_function_calls(mock_callback1, 1);
-    expect_function_calls(mock_callback2, 1);
+    // The port has 2 nodes, so we expect 2 node functions to be called
+    expect_function_calls(mock_node1, 1);
+    expect_function_calls(mock_node2, 1);
 
-    linvoke_emit(linvoke, event_id);
+    linvoke_emit(linvoke, port_id);
 
     linvoke_destroy(linvoke);
 }
 
-static void test_multiple_events_same_id_one_callback(void **state)
+static void test_multiple_ports_same_id_one_node(void **state)
 {
     (void) state; // unused
 
     linvoke_s *linvoke = linvoke_create();
 
-    // There should be 0 event registered
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 0);
+    // There should be 0 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 0);
 
-    const uint32_t event1_id = 0;
-    const uint32_t event2_id = 0;
-    linvoke_register_event(linvoke, event1_id);
-    linvoke_register_event(linvoke, event2_id);
+    const uint32_t port1_id = 0;
+    const uint32_t port2_id = 0;
+    linvoke_register_port(linvoke, port1_id);
+    linvoke_register_port(linvoke, port2_id);
 
-    // There should be 1 event registered, because we tried to register the same event id twice
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 1);
+    // There should be 1 port registered, because we tried to register the same port id twice
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 1);
 
-    // The events should have 0 nodes connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event1_id), 0);
-    assert_int_equal(linvoke_get_node_count(linvoke, event2_id), 0);
+    // The ports should have 0 nodes connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port1_id), 0);
+    assert_int_equal(linvoke_get_node_count(linvoke, port2_id), 0);
 
-    // This connect call will work, because the event with id 0 is not connected to the mock_callback1
-    linvoke_connect(linvoke, event1_id, mock_callback1, NULL);
+    // This connect call will work, because the port with id 0 is not connected to the mock_node1
+    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
 
-    // This connect call will not work, because the event with id 0 is already connected to the mock_callback1
-    linvoke_connect(linvoke, event2_id, mock_callback1, NULL);
+    // This connect call will not work, because the port with id 0 is already connected to the mock_node1
+    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
 
-    // Since both events have the same id, and we already registered the event id 0 and connected
-    // the mock_callback1 to that id, we expect the event with id 0 to have 1 node connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event1_id), 1);
-    assert_int_equal(linvoke_get_node_count(linvoke, event2_id), 1);
+    // Since both ports have the same id, and we already registered the port id 0 and connected
+    // the mock_node1 to that id, we expect the port with id 0 to have 1 node connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port1_id), 1);
+    assert_int_equal(linvoke_get_node_count(linvoke, port2_id), 1);
 
-    // Because both nodes have the same id, emitting the events with id 0
-    // (both event1_id and event2_id) will call the mock_callback1 twice
-    expect_function_calls(mock_callback1, 2);
+    // Because both nodes have the same id, emitting the ports with id 0
+    // (both port1_id and port2_id) will call the mock_node1 twice
+    expect_function_calls(mock_node1, 2);
 
-    linvoke_emit(linvoke, event1_id);
-    linvoke_emit(linvoke, event2_id);
+    linvoke_emit(linvoke, port1_id);
+    linvoke_emit(linvoke, port2_id);
 
     linvoke_destroy(linvoke);
 }
 
-static void test_multiple_events_same_id_multiple_same_callback(void **state)
+static void test_multiple_ports_same_id_multiple_same_node(void **state)
 {
     (void) state; // unused
 
     linvoke_s *linvoke = linvoke_create();
 
-    // There should be 0 event registered
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 0);
+    // There should be 0 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 0);
 
-    const uint32_t event1_id = 0;
-    const uint32_t event2_id = 0;
-    linvoke_register_event(linvoke, event1_id);
-    linvoke_register_event(linvoke, event2_id);
+    const uint32_t port1_id = 0;
+    const uint32_t port2_id = 0;
+    linvoke_register_port(linvoke, port1_id);
+    linvoke_register_port(linvoke, port2_id);
 
-    // There should be 1 event registered, because we tried to register the same event id twice
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 1);
+    // There should be 1 port registered, because we tried to register the same port id twice
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 1);
 
-    // The events should have 0 nodes connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event1_id), 0);
-    assert_int_equal(linvoke_get_node_count(linvoke, event2_id), 0);
+    // The ports should have 0 nodes connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port1_id), 0);
+    assert_int_equal(linvoke_get_node_count(linvoke, port2_id), 0);
 
-    // This connect call will work, because the event with id 0
-    // (event1_id in this case and event1_id == event2_id) is not connected to the mock_callback1
-    linvoke_connect(linvoke, event1_id, mock_callback1, NULL);
+    // This connect call will work, because the port with id 0
+    // (port1_id in this case and port1_id == port2_id) is not connected to the mock_node1
+    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
 
-    // This connect call will not work, because the event with id 0
-    // (event1_id in this case and event1_id == event2_id) is already connected to the mock_callback1
-    linvoke_connect(linvoke, event1_id, mock_callback1, NULL);
+    // This connect call will not work, because the port with id 0
+    // (port1_id in this case and port1_id == port2_id) is already connected to the mock_node1
+    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
 
-    // This connect call will not work, because the event with id 0
-    // (event2_id in this case and event1_id == event2_id) is already connected to the mock_callback1
-    linvoke_connect(linvoke, event2_id, mock_callback1, NULL);
+    // This connect call will not work, because the port with id 0
+    // (port2_id in this case and port1_id == port2_id) is already connected to the mock_node1
+    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
 
-    // This connect call will not work, because the event with id 0
-    // (event2_id in this case and event1_id == event2_id) is already connected to the mock_callback1
-    linvoke_connect(linvoke, event2_id, mock_callback1, NULL);
+    // This connect call will not work, because the port with id 0
+    // (port2_id in this case and port1_id == port2_id) is already connected to the mock_node1
+    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
 
-    // Since both events have the same id, and we already registered the event id 0 and connected
-    // the mock_callback1 to that id, we expect the event with id 0 to have 1 node connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event1_id), 1);
-    assert_int_equal(linvoke_get_node_count(linvoke, event2_id), 1);
+    // Since both ports have the same id, and we already registered the port id 0 and connected
+    // the mock_node1 to that id, we expect the port with id 0 to have 1 node connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port1_id), 1);
+    assert_int_equal(linvoke_get_node_count(linvoke, port2_id), 1);
 
-    // Because both nodes have the same id, emitting the events with id 0
-    // (both event1_id and event2_id) will call the mock_callback1 twice
-    expect_function_calls(mock_callback1, 2);
+    // Because both nodes have the same id, emitting the ports with id 0
+    // (both port1_id and port2_id) will call the mock_node1 twice
+    expect_function_calls(mock_node1, 2);
 
-    linvoke_emit(linvoke, event1_id);
-    linvoke_emit(linvoke, event2_id);
+    linvoke_emit(linvoke, port1_id);
+    linvoke_emit(linvoke, port2_id);
 
     linvoke_destroy(linvoke);
 }
 
-static void test_multiple_events_same_id_multiple_different_callback(void **state)
+static void test_multiple_ports_same_id_multiple_different_node(void **state)
 {
     (void) state; // unused
 
     linvoke_s *linvoke = linvoke_create();
 
-    // There should be 0 event registered
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 0);
+    // There should be 0 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 0);
 
-    const uint32_t event1_id = 0;
-    const uint32_t event2_id = 0;
-    linvoke_register_event(linvoke, event1_id);
-    linvoke_register_event(linvoke, event2_id);
+    const uint32_t port1_id = 0;
+    const uint32_t port2_id = 0;
+    linvoke_register_port(linvoke, port1_id);
+    linvoke_register_port(linvoke, port2_id);
 
-    // There should be 1 event registered, because we tried to register the same event id twice
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 1);
+    // There should be 1 port registered, because we tried to register the same port id twice
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 1);
 
-    // The events should have 0 nodes connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event1_id), 0);
-    assert_int_equal(linvoke_get_node_count(linvoke, event2_id), 0);
+    // The ports should have 0 nodes connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port1_id), 0);
+    assert_int_equal(linvoke_get_node_count(linvoke, port2_id), 0);
 
     /**
-     * Event 1 Connections
+     * Port 1 Connections
      */
 
-    // This connect call will work, because the event with id 0
-    // (event1_id in this case and event1_id == event2_id) is not connected to the mock_callback1
-    linvoke_connect(linvoke, event1_id, mock_callback1, NULL);
+    // This connect call will work, because the port with id 0
+    // (port1_id in this case and port1_id == port2_id) is not connected to the mock_node1
+    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
 
-    // This connect call will not work, because the event with id 0
-    // (event1_id in this case and event1_id == event2_id) is already connected to the mock_callback1
-    linvoke_connect(linvoke, event1_id, mock_callback1, NULL);
+    // This connect call will not work, because the port with id 0
+    // (port1_id in this case and port1_id == port2_id) is already connected to the mock_node1
+    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
 
-    // This connect call will work, because the event with id 0
-    // (event1_id in this case and event1_id == event2_id) is not connected to the mock_callback2
-    linvoke_connect(linvoke, event1_id, mock_callback2, NULL);
+    // This connect call will work, because the port with id 0
+    // (port1_id in this case and port1_id == port2_id) is not connected to the mock_node2
+    linvoke_connect(linvoke, port1_id, mock_node2, NULL);
 
-    // This connect call will not work, because the event with id 0
-    // (event1_id in this case and event1_id == event2_id) is already connected to the mock_callback2
-    linvoke_connect(linvoke, event1_id, mock_callback2, NULL);
+    // This connect call will not work, because the port with id 0
+    // (port1_id in this case and port1_id == port2_id) is already connected to the mock_node2
+    linvoke_connect(linvoke, port1_id, mock_node2, NULL);
 
     /**
-     * Event 2 Connections
+     * Port 2 Connections
      */
 
-    // This connect call will work, because the event with id 0
-    // (event2_id in this case and event1_id == event2_id) is not connected to the mock_callback1
-    linvoke_connect(linvoke, event2_id, mock_callback1, NULL);
+    // This connect call will work, because the port with id 0
+    // (port2_id in this case and port1_id == port2_id) is not connected to the mock_node1
+    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
 
-    // This connect call will not work, because the event with id 0
-    // (event2_id in this case and event1_id == event2_id) is already connected to the mock_callback1
-    linvoke_connect(linvoke, event2_id, mock_callback1, NULL);
+    // This connect call will not work, because the port with id 0
+    // (port2_id in this case and port1_id == port2_id) is already connected to the mock_node1
+    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
 
-    // This connect call will work, because the event with id 0
-    // (event2_id in this case and event1_id == event2_id) is not connected to the mock_callback2
-    linvoke_connect(linvoke, event2_id, mock_callback2, NULL);
+    // This connect call will work, because the port with id 0
+    // (port2_id in this case and port1_id == port2_id) is not connected to the mock_node2
+    linvoke_connect(linvoke, port2_id, mock_node2, NULL);
 
-    // This connect call will not work, because the event with id 0
-    // (event2_id in this case and event1_id == event2_id) is already connected to the mock_callback2
-    linvoke_connect(linvoke, event2_id, mock_callback2, NULL);
+    // This connect call will not work, because the port with id 0
+    // (port2_id in this case and port1_id == port2_id) is already connected to the mock_node2
+    linvoke_connect(linvoke, port2_id, mock_node2, NULL);
 
-    // Since both events have the same id, and we already registered the event id 0 and connected
-    // the mock_callback1 and mock_callback2 to that id, we expect the event with id 0
-    // (both event1_id and event2_id ) to have 2 nodes connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event1_id), 2);
-    assert_int_equal(linvoke_get_node_count(linvoke, event2_id), 2);
+    // Since both ports have the same id, and we already registered the port id 0 and connected
+    // the mock_node1 and mock_node2 to that id, we expect the port with id 0
+    // (both port1_id and port2_id ) to have 2 nodes connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port1_id), 2);
+    assert_int_equal(linvoke_get_node_count(linvoke, port2_id), 2);
 
-    // Because both nodes have the same id, emitting the event with id == event1_id
-    // will call the mock_callback1 and mock_callback2
-    expect_function_calls(mock_callback1, 1);
-    expect_function_calls(mock_callback2, 1);
+    // Because both nodes have the same id, emitting the port with id == port1_id
+    // will call the mock_node1 and mock_node2
+    expect_function_calls(mock_node1, 1);
+    expect_function_calls(mock_node2, 1);
 
-    linvoke_emit(linvoke, event1_id);
+    linvoke_emit(linvoke, port1_id);
 
-    // Because both nodes have the same id, emitting the event with id == event2_id
-    // will call the mock_callback1 and mock_callback2
-    expect_function_calls(mock_callback1, 1);
-    expect_function_calls(mock_callback2, 1);
+    // Because both nodes have the same id, emitting the port with id == port2_id
+    // will call the mock_node1 and mock_node2
+    expect_function_calls(mock_node1, 1);
+    expect_function_calls(mock_node2, 1);
 
-    linvoke_emit(linvoke, event2_id);
+    linvoke_emit(linvoke, port2_id);
 
     linvoke_destroy(linvoke);
 }
 
-static void test_multiple_events_different_id_one_callback(void **state)
+static void test_multiple_ports_different_id_one_node(void **state)
 {
     (void) state; // unused
 
     linvoke_s *linvoke = linvoke_create();
 
-    // There should be 0 event registered
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 0);
+    // There should be 0 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 0);
 
-    const uint32_t event1_id = 0;
-    const uint32_t event2_id = 1;
-    linvoke_register_event(linvoke, event1_id);
-    linvoke_register_event(linvoke, event2_id);
+    const uint32_t port1_id = 0;
+    const uint32_t port2_id = 1;
+    linvoke_register_port(linvoke, port1_id);
+    linvoke_register_port(linvoke, port2_id);
 
-    // There should be 2 event registered
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 2);
+    // There should be 2 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 2);
 
-    // The events should have 0 nodes connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event1_id), 0);
-    assert_int_equal(linvoke_get_node_count(linvoke, event2_id), 0);
+    // The ports should have 0 nodes connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port1_id), 0);
+    assert_int_equal(linvoke_get_node_count(linvoke, port2_id), 0);
 
-    // This connect call will work, because the event with id 0 is not connected to the mock_callback1
-    linvoke_connect(linvoke, event1_id, mock_callback1, NULL);
+    // This connect call will work, because the port with id 0 is not connected to the mock_node1
+    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
 
-    // This connect call will work, because the event with id 1 is not connected to the mock_callback1
-    linvoke_connect(linvoke, event2_id, mock_callback1, NULL);
+    // This connect call will work, because the port with id 1 is not connected to the mock_node1
+    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
 
-    // Both events are connected to the mock_callback1, meaning both events have one node connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event1_id), 1);
-    assert_int_equal(linvoke_get_node_count(linvoke, event2_id), 1);
+    // Both ports are connected to the mock_node1, meaning both ports have one node connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port1_id), 1);
+    assert_int_equal(linvoke_get_node_count(linvoke, port2_id), 1);
 
-    // Emitting both events will call mock_callback1 one time each, so 2 total
-    expect_function_calls(mock_callback1, 2);
-    linvoke_emit(linvoke, event1_id);
-    linvoke_emit(linvoke, event2_id);
+    // Emitting both ports will call mock_node1 one time each, so 2 total
+    expect_function_calls(mock_node1, 2);
+    linvoke_emit(linvoke, port1_id);
+    linvoke_emit(linvoke, port2_id);
 
     linvoke_destroy(linvoke);
 }
 
-static void test_multiple_events_different_id_multiple_same_callback(void **state)
+static void test_multiple_ports_different_id_multiple_same_node(void **state)
 {
     (void) state; // unused
 
     linvoke_s *linvoke = linvoke_create();
 
-    // There should be 0 event registered
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 0);
+    // There should be 0 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 0);
 
-    const uint32_t event1_id = 0;
-    const uint32_t event2_id = 1;
-    linvoke_register_event(linvoke, event1_id);
-    linvoke_register_event(linvoke, event2_id);
+    const uint32_t port1_id = 0;
+    const uint32_t port2_id = 1;
+    linvoke_register_port(linvoke, port1_id);
+    linvoke_register_port(linvoke, port2_id);
 
-    // There should be 2 event registered
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 2);
+    // There should be 2 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 2);
 
-    // The events should have 0 nodes connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event1_id), 0);
-    assert_int_equal(linvoke_get_node_count(linvoke, event2_id), 0);
+    // The ports should have 0 nodes connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port1_id), 0);
+    assert_int_equal(linvoke_get_node_count(linvoke, port2_id), 0);
 
-    // This connect call will work, because the event with id 0
-    // (event1_id in this case and event1_id == event2_id) is not connected to the mock_callback1
-    linvoke_connect(linvoke, event1_id, mock_callback1, NULL);
+    // This connect call will work, because the port with id 0
+    // (port1_id in this case and port1_id == port2_id) is not connected to the mock_node1
+    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
 
-    // This connect call will not work, because the event with id 0
-    // (event1_id in this case and event1_id == event2_id) is already connected to the mock_callback1
-    linvoke_connect(linvoke, event1_id, mock_callback1, NULL);
+    // This connect call will not work, because the port with id 0
+    // (port1_id in this case and port1_id == port2_id) is already connected to the mock_node1
+    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
 
-    // This connect call will work, because the event with id 1
-    // (event2_id in this case and event1_id == event2_id) is not connected to the mock_callback1
-    linvoke_connect(linvoke, event2_id, mock_callback1, NULL);
+    // This connect call will work, because the port with id 1
+    // (port2_id in this case and port1_id == port2_id) is not connected to the mock_node1
+    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
 
-    // This connect call will not work, because the event with id 1
-    // (event2_id in this case and event1_id == event2_id) is already connected to the mock_callback1
-    linvoke_connect(linvoke, event2_id, mock_callback1, NULL);
+    // This connect call will not work, because the port with id 1
+    // (port2_id in this case and port1_id == port2_id) is already connected to the mock_node1
+    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
 
-    // The event with id == event1_id has one node connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event1_id), 1);
+    // The port with id == port1_id has one node connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port1_id), 1);
 
-    // The event with id == event2_id has one node connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event2_id), 1);
+    // The port with id == port2_id has one node connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port2_id), 1);
 
-    // Emitting both events will call mock_callback1 one time each, so 2 total
-    expect_function_calls(mock_callback1, 2);
-    linvoke_emit(linvoke, event1_id);
-    linvoke_emit(linvoke, event2_id);
+    // Emitting both ports will call mock_node1 one time each, so 2 total
+    expect_function_calls(mock_node1, 2);
+    linvoke_emit(linvoke, port1_id);
+    linvoke_emit(linvoke, port2_id);
 
     linvoke_destroy(linvoke);
 }
 
-static void test_multiple_events_different_id_multiple_different_callback(void **state)
+static void test_multiple_ports_different_id_multiple_different_node(void **state)
 {
     (void) state; // unused
 
     linvoke_s *linvoke = linvoke_create();
 
-    // There should be 0 event registered
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 0);
+    // There should be 0 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 0);
 
-    const uint32_t event1_id = 0;
-    const uint32_t event2_id = 1;
-    linvoke_register_event(linvoke, event1_id);
-    linvoke_register_event(linvoke, event2_id);
+    const uint32_t port1_id = 0;
+    const uint32_t port2_id = 1;
+    linvoke_register_port(linvoke, port1_id);
+    linvoke_register_port(linvoke, port2_id);
 
-    // There should be 2 event registered
-    assert_int_equal(linvoke_get_registered_event_count(linvoke), 2);
+    // There should be 2 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 2);
 
-    // The events should have 0 nodes connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event1_id), 0);
-    assert_int_equal(linvoke_get_node_count(linvoke, event2_id), 0);
-
-    /**
-     * Event 1 Connections
-     */
-
-    // This connect call will work, because the event with id 0
-    // (event1_id in this case and event1_id == event2_id) is not connected to the mock_callback1
-    linvoke_connect(linvoke, event1_id, mock_callback1, NULL);
-
-    // This connect call will not work, because the event with id 0
-    // (event1_id in this case and event1_id == event2_id) is already connected to the mock_callback1
-    linvoke_connect(linvoke, event1_id, mock_callback1, NULL);
-
-    // This connect call will work, because the event with id 0
-    // (event1_id in this case and event1_id == event2_id) is not connected to the mock_callback2
-    linvoke_connect(linvoke, event1_id, mock_callback2, NULL);
-
-    // This connect call will not work, because the event with id 0
-    // (event1_id in this case and event1_id == event2_id) is already connected to the mock_callback2
-    linvoke_connect(linvoke, event1_id, mock_callback2, NULL);
+    // The ports should have 0 nodes connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port1_id), 0);
+    assert_int_equal(linvoke_get_node_count(linvoke, port2_id), 0);
 
     /**
-     * Event 2 Connections
+     * Port 1 Connections
      */
 
-    // This connect call will work, because the event with id 0
-    // (event2_id in this case and event1_id == event2_id) is not connected to the mock_callback1
-    linvoke_connect(linvoke, event2_id, mock_callback1, NULL);
+    // This connect call will work, because the port with id 0
+    // (port1_id in this case and port1_id == port2_id) is not connected to the mock_node1
+    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
 
-    // This connect call will not work, because the event with id 0
-    // (event2_id in this case and event1_id == event2_id) is already connected to the mock_callback1
-    linvoke_connect(linvoke, event2_id, mock_callback1, NULL);
+    // This connect call will not work, because the port with id 0
+    // (port1_id in this case and port1_id == port2_id) is already connected to the mock_node1
+    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
 
-    // This connect call will work, because the event with id 0
-    // (event2_id in this case and event1_id == event2_id) is not connected to the mock_callback2
-    linvoke_connect(linvoke, event2_id, mock_callback2, NULL);
+    // This connect call will work, because the port with id 0
+    // (port1_id in this case and port1_id == port2_id) is not connected to the mock_node2
+    linvoke_connect(linvoke, port1_id, mock_node2, NULL);
 
-    // This connect call will not work, because the event with id 0
-    // (event2_id in this case and event1_id == event2_id) is already connected to the mock_callback2
-    linvoke_connect(linvoke, event2_id, mock_callback2, NULL);
+    // This connect call will not work, because the port with id 0
+    // (port1_id in this case and port1_id == port2_id) is already connected to the mock_node2
+    linvoke_connect(linvoke, port1_id, mock_node2, NULL);
 
-    // The event with id == event1_id has one node connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event1_id), 2);
+    /**
+     * Port 2 Connections
+     */
 
-    // The event with id == event2_id has one node connected
-    assert_int_equal(linvoke_get_node_count(linvoke, event2_id), 2);
+    // This connect call will work, because the port with id 0
+    // (port2_id in this case and port1_id == port2_id) is not connected to the mock_node1
+    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
 
-    // Emitting event 1 will call mock_callback1 and mock_callback2
-    expect_function_calls(mock_callback1, 1);
-    expect_function_calls(mock_callback2, 1);
-    linvoke_emit(linvoke, event1_id);
+    // This connect call will not work, because the port with id 0
+    // (port2_id in this case and port1_id == port2_id) is already connected to the mock_node1
+    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
 
-    // Emitting event 2 will call mock_callback1 and mock_callback2
-    expect_function_calls(mock_callback1, 1);
-    expect_function_calls(mock_callback2, 1);
-    linvoke_emit(linvoke, event2_id);
+    // This connect call will work, because the port with id 0
+    // (port2_id in this case and port1_id == port2_id) is not connected to the mock_node2
+    linvoke_connect(linvoke, port2_id, mock_node2, NULL);
+
+    // This connect call will not work, because the port with id 0
+    // (port2_id in this case and port1_id == port2_id) is already connected to the mock_node2
+    linvoke_connect(linvoke, port2_id, mock_node2, NULL);
+
+    // The port with id == port1_id has one node connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port1_id), 2);
+
+    // The port with id == port2_id has one node connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port2_id), 2);
+
+    // Emitting port 1 will call mock_node1 and mock_node2
+    expect_function_calls(mock_node1, 1);
+    expect_function_calls(mock_node2, 1);
+    linvoke_emit(linvoke, port1_id);
+
+    // Emitting port 2 will call mock_node1 and mock_node2
+    expect_function_calls(mock_node1, 1);
+    expect_function_calls(mock_node2, 1);
+    linvoke_emit(linvoke, port2_id);
+
+    linvoke_destroy(linvoke);
+}
+
+static void test_one_port_one_node_with_data(void **state)
+{
+    (void) state; // unused
+
+    linvoke_s *linvoke = linvoke_create();
+
+    // There should be 0 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 0);
+
+    const uint32_t port_id = 36;
+    linvoke_register_port(linvoke, port_id);
+
+    // There should be 1 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 1);
+
+    // The port should have 0 nodes connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port_id), 0);
+
+    const char *event_data = "Some string data";
+    linvoke_connect(linvoke, port_id, mock_node_with_data, &event_data);
+
+    // The port should have 1 node connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port_id), 1);
+
+    // Since only 1 node is connected, when we emit the port, we expect only 1 node
+    expect_function_calls(mock_node_with_data, 1);
+
+    linvoke_emit(linvoke, port_id);
 
     linvoke_destroy(linvoke);
 }
@@ -475,15 +519,16 @@ static void test_multiple_events_different_id_multiple_different_callback(void *
 int main(void)
 {
     const struct CMUnitTest tests[] = {
-        cmocka_unit_test(test_one_event_one_callback),
-        cmocka_unit_test(test_one_event_multiple_same_callbacks),
-        cmocka_unit_test(test_one_event_multiple_different_callbacks),
-        cmocka_unit_test(test_multiple_events_same_id_one_callback),
-        cmocka_unit_test(test_multiple_events_same_id_multiple_same_callback),
-        cmocka_unit_test(test_multiple_events_same_id_multiple_different_callback),
-        cmocka_unit_test(test_multiple_events_different_id_one_callback),
-        cmocka_unit_test(test_multiple_events_different_id_multiple_same_callback),
-        cmocka_unit_test(test_multiple_events_different_id_multiple_different_callback),
+        cmocka_unit_test(test_one_port_one_node),
+        cmocka_unit_test(test_one_port_one_node_with_data),
+        cmocka_unit_test(test_one_port_multiple_same_nodes),
+        cmocka_unit_test(test_one_port_multiple_different_nodes),
+        cmocka_unit_test(test_multiple_ports_same_id_one_node),
+        cmocka_unit_test(test_multiple_ports_same_id_multiple_same_node),
+        cmocka_unit_test(test_multiple_ports_same_id_multiple_different_node),
+        cmocka_unit_test(test_multiple_ports_different_id_one_node),
+        cmocka_unit_test(test_multiple_ports_different_id_multiple_same_node),
+        cmocka_unit_test(test_multiple_ports_different_id_multiple_different_node),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);
