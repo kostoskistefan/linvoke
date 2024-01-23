@@ -36,6 +36,20 @@ void mock_node_with_data(linvoke_event_s *event)
     // by one function. Therefore, we can directly test the port_id and user data here.
     assert_int_equal(port_id, 36);
     assert_string_equal(data, "Some string data");
+
+    function_called();
+}
+
+void mock_node_with_overriden_data(linvoke_event_s *event)
+{
+    const uint32_t port_id = linvoke_event_get_port_id(event);
+    const char *data = *((const char **)linvoke_event_get_user_data(event));
+
+    // This mock node is only used for testing the data inside the event, and is only called
+    // by one function. Therefore, we can directly test the port_id and user data here.
+    assert_int_equal(port_id, 28);
+    assert_string_equal(data, "Some overriden string data");
+
     function_called();
 }
 
@@ -57,7 +71,7 @@ static void test_one_port_one_node(void **state)
     // The port should have 0 nodes connected
     assert_int_equal(linvoke_get_node_count(linvoke, port_id), 0);
 
-    linvoke_connect(linvoke, port_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port_id, mock_node1);
 
     // The port should have 1 node connected
     assert_int_equal(linvoke_get_node_count(linvoke, port_id), 1);
@@ -88,8 +102,8 @@ static void test_one_port_multiple_same_nodes(void **state)
     // The port should have 0 nodes connected
     assert_int_equal(linvoke_get_node_count(linvoke, port_id), 0);
 
-    linvoke_connect(linvoke, port_id, mock_node1, NULL);
-    linvoke_connect(linvoke, port_id, mock_node1, NULL); // This one will fail since it's already connected
+    linvoke_connect(linvoke, port_id, mock_node1);
+    linvoke_connect(linvoke, port_id, mock_node1); // This one will fail since it's already connected
 
     // The port should have 1 node connected, because the second linvoke_connect
     // should not work, since the node is already connected
@@ -121,8 +135,8 @@ static void test_one_port_multiple_different_nodes(void **state)
     // The port should have 0 nodes connected
     assert_int_equal(linvoke_get_node_count(linvoke, port_id), 0);
 
-    linvoke_connect(linvoke, port_id, mock_node1, NULL);
-    linvoke_connect(linvoke, port_id, mock_node2, NULL);
+    linvoke_connect(linvoke, port_id, mock_node1);
+    linvoke_connect(linvoke, port_id, mock_node2);
 
     // The port should have 2 node connected
     assert_int_equal(linvoke_get_node_count(linvoke, port_id), 2);
@@ -158,10 +172,10 @@ static void test_multiple_ports_same_id_one_node(void **state)
     assert_int_equal(linvoke_get_node_count(linvoke, port2_id), 0);
 
     // This connect call will work, because the port with id 0 is not connected to the mock_node1
-    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port1_id, mock_node1);
 
     // This connect call will not work, because the port with id 0 is already connected to the mock_node1
-    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port2_id, mock_node1);
 
     // Since both ports have the same id, and we already registered the port id 0 and connected
     // the mock_node1 to that id, we expect the port with id 0 to have 1 node connected
@@ -201,19 +215,19 @@ static void test_multiple_ports_same_id_multiple_same_node(void **state)
 
     // This connect call will work, because the port with id 0
     // (port1_id in this case and port1_id == port2_id) is not connected to the mock_node1
-    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port1_id, mock_node1);
 
     // This connect call will not work, because the port with id 0
     // (port1_id in this case and port1_id == port2_id) is already connected to the mock_node1
-    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port1_id, mock_node1);
 
     // This connect call will not work, because the port with id 0
     // (port2_id in this case and port1_id == port2_id) is already connected to the mock_node1
-    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port2_id, mock_node1);
 
     // This connect call will not work, because the port with id 0
     // (port2_id in this case and port1_id == port2_id) is already connected to the mock_node1
-    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port2_id, mock_node1);
 
     // Since both ports have the same id, and we already registered the port id 0 and connected
     // the mock_node1 to that id, we expect the port with id 0 to have 1 node connected
@@ -257,19 +271,19 @@ static void test_multiple_ports_same_id_multiple_different_node(void **state)
 
     // This connect call will work, because the port with id 0
     // (port1_id in this case and port1_id == port2_id) is not connected to the mock_node1
-    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port1_id, mock_node1);
 
     // This connect call will not work, because the port with id 0
     // (port1_id in this case and port1_id == port2_id) is already connected to the mock_node1
-    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port1_id, mock_node1);
 
     // This connect call will work, because the port with id 0
     // (port1_id in this case and port1_id == port2_id) is not connected to the mock_node2
-    linvoke_connect(linvoke, port1_id, mock_node2, NULL);
+    linvoke_connect(linvoke, port1_id, mock_node2);
 
     // This connect call will not work, because the port with id 0
     // (port1_id in this case and port1_id == port2_id) is already connected to the mock_node2
-    linvoke_connect(linvoke, port1_id, mock_node2, NULL);
+    linvoke_connect(linvoke, port1_id, mock_node2);
 
     /**
      * Port 2 Connections
@@ -277,19 +291,19 @@ static void test_multiple_ports_same_id_multiple_different_node(void **state)
 
     // This connect call will work, because the port with id 0
     // (port2_id in this case and port1_id == port2_id) is not connected to the mock_node1
-    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port2_id, mock_node1);
 
     // This connect call will not work, because the port with id 0
     // (port2_id in this case and port1_id == port2_id) is already connected to the mock_node1
-    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port2_id, mock_node1);
 
     // This connect call will work, because the port with id 0
     // (port2_id in this case and port1_id == port2_id) is not connected to the mock_node2
-    linvoke_connect(linvoke, port2_id, mock_node2, NULL);
+    linvoke_connect(linvoke, port2_id, mock_node2);
 
     // This connect call will not work, because the port with id 0
     // (port2_id in this case and port1_id == port2_id) is already connected to the mock_node2
-    linvoke_connect(linvoke, port2_id, mock_node2, NULL);
+    linvoke_connect(linvoke, port2_id, mock_node2);
 
     // Since both ports have the same id, and we already registered the port id 0 and connected
     // the mock_node1 and mock_node2 to that id, we expect the port with id 0
@@ -336,10 +350,10 @@ static void test_multiple_ports_different_id_one_node(void **state)
     assert_int_equal(linvoke_get_node_count(linvoke, port2_id), 0);
 
     // This connect call will work, because the port with id 0 is not connected to the mock_node1
-    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port1_id, mock_node1);
 
     // This connect call will work, because the port with id 1 is not connected to the mock_node1
-    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port2_id, mock_node1);
 
     // Both ports are connected to the mock_node1, meaning both ports have one node connected
     assert_int_equal(linvoke_get_node_count(linvoke, port1_id), 1);
@@ -376,19 +390,19 @@ static void test_multiple_ports_different_id_multiple_same_node(void **state)
 
     // This connect call will work, because the port with id 0
     // (port1_id in this case and port1_id == port2_id) is not connected to the mock_node1
-    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port1_id, mock_node1);
 
     // This connect call will not work, because the port with id 0
     // (port1_id in this case and port1_id == port2_id) is already connected to the mock_node1
-    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port1_id, mock_node1);
 
     // This connect call will work, because the port with id 1
     // (port2_id in this case and port1_id == port2_id) is not connected to the mock_node1
-    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port2_id, mock_node1);
 
     // This connect call will not work, because the port with id 1
     // (port2_id in this case and port1_id == port2_id) is already connected to the mock_node1
-    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port2_id, mock_node1);
 
     // The port with id == port1_id has one node connected
     assert_int_equal(linvoke_get_node_count(linvoke, port1_id), 1);
@@ -431,19 +445,19 @@ static void test_multiple_ports_different_id_multiple_different_node(void **stat
 
     // This connect call will work, because the port with id 0
     // (port1_id in this case and port1_id == port2_id) is not connected to the mock_node1
-    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port1_id, mock_node1);
 
     // This connect call will not work, because the port with id 0
     // (port1_id in this case and port1_id == port2_id) is already connected to the mock_node1
-    linvoke_connect(linvoke, port1_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port1_id, mock_node1);
 
     // This connect call will work, because the port with id 0
     // (port1_id in this case and port1_id == port2_id) is not connected to the mock_node2
-    linvoke_connect(linvoke, port1_id, mock_node2, NULL);
+    linvoke_connect(linvoke, port1_id, mock_node2);
 
     // This connect call will not work, because the port with id 0
     // (port1_id in this case and port1_id == port2_id) is already connected to the mock_node2
-    linvoke_connect(linvoke, port1_id, mock_node2, NULL);
+    linvoke_connect(linvoke, port1_id, mock_node2);
 
     /**
      * Port 2 Connections
@@ -451,19 +465,19 @@ static void test_multiple_ports_different_id_multiple_different_node(void **stat
 
     // This connect call will work, because the port with id 0
     // (port2_id in this case and port1_id == port2_id) is not connected to the mock_node1
-    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port2_id, mock_node1);
 
     // This connect call will not work, because the port with id 0
     // (port2_id in this case and port1_id == port2_id) is already connected to the mock_node1
-    linvoke_connect(linvoke, port2_id, mock_node1, NULL);
+    linvoke_connect(linvoke, port2_id, mock_node1);
 
     // This connect call will work, because the port with id 0
     // (port2_id in this case and port1_id == port2_id) is not connected to the mock_node2
-    linvoke_connect(linvoke, port2_id, mock_node2, NULL);
+    linvoke_connect(linvoke, port2_id, mock_node2);
 
     // This connect call will not work, because the port with id 0
     // (port2_id in this case and port1_id == port2_id) is already connected to the mock_node2
-    linvoke_connect(linvoke, port2_id, mock_node2, NULL);
+    linvoke_connect(linvoke, port2_id, mock_node2);
 
     // The port with id == port1_id has one node connected
     assert_int_equal(linvoke_get_node_count(linvoke, port1_id), 2);
@@ -503,7 +517,7 @@ static void test_one_port_one_node_with_data(void **state)
     assert_int_equal(linvoke_get_node_count(linvoke, port_id), 0);
 
     const char *event_data = "Some string data";
-    linvoke_connect(linvoke, port_id, mock_node_with_data, &event_data);
+    linvoke_connect_with_data(linvoke, port_id, mock_node_with_data, &event_data);
 
     // The port should have 1 node connected
     assert_int_equal(linvoke_get_node_count(linvoke, port_id), 1);
@@ -516,11 +530,45 @@ static void test_one_port_one_node_with_data(void **state)
     linvoke_destroy(linvoke);
 }
 
+static void test_one_port_one_node_with_data_override(void **state)
+{
+    (void) state; // unused
+
+    linvoke_s *linvoke = linvoke_create();
+
+    // There should be 0 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 0);
+
+    const uint32_t port_id = 28;
+    linvoke_register_port(linvoke, port_id);
+
+    // There should be 1 port registered
+    assert_int_equal(linvoke_get_registered_port_count(linvoke), 1);
+
+    // The port should have 0 nodes connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port_id), 0);
+
+    const char *event_data = "Some string data";
+    linvoke_connect_with_data(linvoke, port_id, mock_node_with_overriden_data, &event_data);
+
+    // The port should have 1 node connected
+    assert_int_equal(linvoke_get_node_count(linvoke, port_id), 1);
+
+    // Since only 1 node is connected, when we emit the port, we expect only 1 node
+    expect_function_calls(mock_node_with_overriden_data, 1);
+
+    const char *event_data_overriden = "Some overriden string data";
+    linvoke_emit_with_data(linvoke, port_id, &event_data_overriden);
+
+    linvoke_destroy(linvoke);
+}
+
 int main(void)
 {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_one_port_one_node),
         cmocka_unit_test(test_one_port_one_node_with_data),
+        cmocka_unit_test(test_one_port_one_node_with_data_override),
         cmocka_unit_test(test_one_port_multiple_same_nodes),
         cmocka_unit_test(test_one_port_multiple_different_nodes),
         cmocka_unit_test(test_multiple_ports_same_id_one_node),

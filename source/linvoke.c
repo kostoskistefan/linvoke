@@ -15,12 +15,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifndef LINVOKE_PORT_CAPACITY
-#define LINVOKE_PORT_CAPACITY 8
+#ifndef LINVOKE_PORT_ARRAY_CAPACITY
+#define LINVOKE_PORT_ARRAY_CAPACITY 8
 #endif
 
-#ifndef LINVOKE_NODE_CAPACITY
-#define LINVOKE_NODE_CAPACITY 16
+#ifndef LINVOKE_NODE_ARRAY_CAPACITY
+#define LINVOKE_NODE_ARRAY_CAPACITY 16
 #endif
 
 struct linvoke_event_s
@@ -54,9 +54,9 @@ linvoke_s *linvoke_create(void)
 {
     linvoke_s *linvoke = calloc(1, sizeof(*linvoke));
 
-    linvoke->ports = calloc(LINVOKE_PORT_CAPACITY, sizeof(*linvoke->ports));
+    linvoke->ports = calloc(LINVOKE_PORT_ARRAY_CAPACITY, sizeof(*linvoke->ports));
     linvoke->number_of_registered_ports = 0;
-    linvoke->port_capacity = LINVOKE_PORT_CAPACITY;
+    linvoke->port_capacity = LINVOKE_PORT_ARRAY_CAPACITY;
 
     return linvoke;
 }
@@ -78,27 +78,36 @@ void linvoke_register_port(linvoke_s *const linvoke, uint32_t port_id)
     {
         if (linvoke->ports[i].id == port_id)
         {
-            fprintf(stderr, "An port with id %u already exists.\n", port_id);
+            fprintf(stderr, "A port with id %u already exists.\n", port_id);
             return;
         }
     }
 
     if (linvoke->number_of_registered_ports == linvoke->port_capacity)
     {
-        linvoke->port_capacity += LINVOKE_PORT_CAPACITY;
+        linvoke->port_capacity += LINVOKE_PORT_ARRAY_CAPACITY;
         linvoke->ports = realloc(linvoke->ports, linvoke->port_capacity * sizeof(*linvoke->ports));
     }
 
     linvoke_port_s *const port = &linvoke->ports[linvoke->number_of_registered_ports];
     port->id = port_id;
-    port->nodes = calloc(LINVOKE_NODE_CAPACITY, sizeof(*port->nodes));
+    port->nodes = calloc(LINVOKE_NODE_ARRAY_CAPACITY, sizeof(*port->nodes));
     port->number_of_connected_nodes = 0;
-    port->node_capacity = LINVOKE_NODE_CAPACITY;
+    port->node_capacity = LINVOKE_NODE_ARRAY_CAPACITY;
 
     ++linvoke->number_of_registered_ports;
 }
 
 void linvoke_connect(
+    linvoke_s *const linvoke,
+    const uint32_t port_id,
+    void (*const callback)(linvoke_event_s *event)
+)
+{
+    linvoke_connect_with_data(linvoke, port_id, callback, NULL);
+}
+
+void linvoke_connect_with_data(
     linvoke_s *const linvoke,
     const uint32_t port_id,
     void (*const callback)(linvoke_event_s *event),
@@ -116,18 +125,16 @@ void linvoke_connect(
 
         for (uint32_t j = 0; j < port->number_of_connected_nodes; ++j)
         {
-            if (port->nodes[j].callback != callback)
+            if (port->nodes[j].callback == callback)
             {
-                continue;
+                fprintf(stderr, "The callback function is already connected to port %d\n", port_id);
+                return;
             }
-
-            fprintf(stderr, "A callback with the same address already exists.\n");
-            return;
         }
 
         if (port->number_of_connected_nodes == port->node_capacity)
         {
-            port->node_capacity += LINVOKE_NODE_CAPACITY;
+            port->node_capacity += LINVOKE_NODE_ARRAY_CAPACITY;
             port->nodes = realloc(port->nodes, port->node_capacity * sizeof(*port->nodes));
         }
 
@@ -140,7 +147,7 @@ void linvoke_connect(
         return;
     }
 
-    fprintf(stderr, "An port with id %u does not exist.\n", port_id);
+    fprintf(stderr, "A port with id %u does not exist.\n", port_id);
 }
 
 void linvoke_emit(linvoke_s *const linvoke, const uint32_t port_id)
@@ -164,7 +171,31 @@ void linvoke_emit(linvoke_s *const linvoke, const uint32_t port_id)
         return;
     }
 
-    fprintf(stderr, "An port with id %u does not exist.\n", port_id);
+    fprintf(stderr, "A port with id %u does not exist.\n", port_id);
+}
+
+void linvoke_emit_with_data(linvoke_s *const linvoke, const uint32_t port_id, void *user_data)
+{
+    for (uint32_t i = 0; i < linvoke->number_of_registered_ports; ++i)
+    {
+        if (linvoke->ports[i].id != port_id)
+        {
+            continue;
+        }
+
+        linvoke_port_s *const port = &linvoke->ports[i];
+
+        for (size_t j = 0; j < port->number_of_connected_nodes; ++j)
+        {
+            linvoke_node_s *const node = &port->nodes[j];
+            linvoke_event_s event = { .port_id = port_id, .user_data = user_data };
+            node->callback(&event);
+        }
+
+        return;
+    }
+
+    fprintf(stderr, "A port with id %u does not exist.\n", port_id);
 }
 
 uint32_t linvoke_get_registered_port_count(linvoke_s *const linvoke)
@@ -176,15 +207,13 @@ uint32_t linvoke_get_node_count(linvoke_s *const linvoke, const uint32_t port_id
 {
     for (uint32_t i = 0; i < linvoke->number_of_registered_ports; ++i)
     {
-        if (linvoke->ports[i].id != port_id)
+        if (linvoke->ports[i].id == port_id)
         {
-            continue;
+            return linvoke->ports[i].number_of_connected_nodes;
         }
-
-        return linvoke->ports[i].number_of_connected_nodes;
     }
 
-    fprintf(stderr, "An port with id %u does not exist.\n", port_id);
+    fprintf(stderr, "A port with id %u does not exist.\n", port_id);
     return 0;
 }
 

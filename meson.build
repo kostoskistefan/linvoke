@@ -31,9 +31,29 @@ pkg.generate(linvoke_lib)
 
 # Build the hello world example 
 if get_option('compile_examples')
-  linvoke_hello_world_example_executable = executable(
-    'linvoke-hello-world',
-    'examples/hello_world.c',
+  linvoke_example_simple_event_executable = executable(
+    'linvoke-simple-event',
+    'examples/simple_event.c',
+    dependencies: [linvoke_dep],
+  )
+  linvoke_example_simple_event_with_data_executable = executable(
+    'linvoke-simple-event-with-data',
+    'examples/simple_event_with_data.c',
+    dependencies: [linvoke_dep],
+  )
+  linvoke_example_simple_event_with_data_override_executable = executable(
+    'linvoke-simple-event-with-data-override',
+    'examples/simple_event_with_data_override.c',
+    dependencies: [linvoke_dep],
+  )
+  linvoke_example_multi_node_event_executable = executable(
+    'linvoke-multi-node-event',
+    'examples/multi_node_event.c',
+    dependencies: [linvoke_dep],
+  )
+  linvoke_multi_port_multi_node_event_example_executable = executable(
+    'linvoke-multi-port-multi-node-event',
+    'examples/multi_port_multi_node_event.c',
     dependencies: [linvoke_dep],
   )
 endif

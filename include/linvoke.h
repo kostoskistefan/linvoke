@@ -43,9 +43,21 @@ void linvoke_register_port(linvoke_s *const linvoke, uint32_t port_id);
  * @param linvoke[in] Pointer to a linvoke object
  * @param port_id[in] The ID of the port to which the node will be connected
  * @param callback[in] The callback function that will be called when an event is emitted from the port
- * @param user_data[in] The user data that will be passed to the connected nodes
  */
 void linvoke_connect(
+    linvoke_s *const linvoke,
+    const uint32_t port_id,
+    void (*const callback)(linvoke_event_s *event)
+);
+
+/**
+ * @brief Connects a new node to an port. The callback functions will be called in the order they were connected
+ * @param linvoke[in] Pointer to a linvoke object
+ * @param port_id[in] The ID of the port to which the node will be connected
+ * @param callback[in] The callback function that will be called when an event is emitted from the port
+ * @param user_data[in] The user data that will be passed to the connected nodes
+ */
+void linvoke_connect_with_data(
     linvoke_s *const linvoke,
     const uint32_t port_id,
     void (*const callback)(linvoke_event_s *event),
@@ -58,6 +70,15 @@ void linvoke_connect(
  * @param port_id[in] The ID of the port which will emit an event
  */
 void linvoke_emit(linvoke_s *const linvoke, const uint32_t port_id);
+
+/**
+ * @brief Emits an event from a given port with given data
+ * @param linvoke[in] Pointer to a linvoke object
+ * @param port_id[in] The ID of the port which will emit an event
+ * @param user_data[in] The user data that will be passed to the connected nodes, 
+ *                      overriding the user data that was passed in the connect function
+ */
+void linvoke_emit_with_data(linvoke_s *const linvoke, const uint32_t port_id, void *user_data);
 
 /**
 * @brief Get the number of registered ports

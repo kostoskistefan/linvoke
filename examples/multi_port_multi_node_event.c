@@ -1,5 +1,5 @@
 /**
- * @file:      hello_world.c
+ * @file:      multi_port_multi_node_with_different_data.c
  *
  * @date:      22 January 2024
  *
@@ -83,27 +83,27 @@ int main(void)
     linvoke_register_port(linvoke, multi_node_port);
 
     // Connect the port with id == print_empty_port (id 123) to the print_node
-    linvoke_connect(linvoke, print_empty_port, print_empty_node, NULL); // No user data is passed
+    linvoke_connect(linvoke, print_empty_port, print_empty_node); // No user data is passed
 
     // Connect the port with id == print_string_port (id 12) to the print_string_node
     const char *string_data = "Hey string!";
-    linvoke_connect(linvoke, print_string_port, print_string_node, (void *) &string_data); // String user data
+    linvoke_connect_with_data(linvoke, print_string_port, print_string_node, (void *) &string_data); // String user data
 
     // Connect the port with id == print_int_port (id 0) to the print_int_node
     const int int_data = 15;
-    linvoke_connect(linvoke, print_int_port, print_int_node, (void *) &int_data); // Int user data
+    linvoke_connect_with_data(linvoke, print_int_port, print_int_node, (void *) &int_data); // Int user data
 
     // Connect the port with id == print_struct_port (id 7658) to the print_struct_node
     const custom_struct_data struct_data = { 46, 3.14f };
-    linvoke_connect(linvoke, print_struct_port, print_struct_node, (void *) &struct_data); // Struct user data
+    linvoke_connect_with_data(linvoke, print_struct_port, print_struct_node, (void *) &struct_data); // Struct user data
 
     // Connect the port with id == multi_node_port (id 4444) to multiple nodes
     const char *multi_string_data = "Hello from multi node!";
     const int multi_int_data = 168;
     const custom_struct_data multi_struct_data = { 156, 0.369f };
-    linvoke_connect(linvoke, multi_node_port, print_string_node, (void *) &multi_string_data);
-    linvoke_connect(linvoke, multi_node_port, print_int_node, (void *) &multi_int_data);
-    linvoke_connect(linvoke, multi_node_port, print_struct_node, (void *) &multi_struct_data);
+    linvoke_connect_with_data(linvoke, multi_node_port, print_string_node, (void *) &multi_string_data);
+    linvoke_connect_with_data(linvoke, multi_node_port, print_int_node, (void *) &multi_int_data);
+    linvoke_connect_with_data(linvoke, multi_node_port, print_struct_node, (void *) &multi_struct_data);
 
     // Emit the ports
     linvoke_emit(linvoke, print_empty_port);
