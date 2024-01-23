@@ -4,61 +4,19 @@
 
 **Linvoke** is a lightweight C library that provides a simple observer pattern implementation. It allows users to register ports, connect multiple nodes (callback functions) to those ports, and emit events from the ports with optional user data.
 
-## Example Projects
+## Example projects
 
-Example projects are included in this repository and can be found in the `examples` directory.
+Linvoke comes with several example projects that show how to use Linvoke. They are located in the `examples` directory of this repository.
 
-To compile the included example projects, see step 2 in the [build instructions](#build-instructions).
+To compile the included example projects along with the Linvoke library, see step 2 in the [build instructions](#build-instructions).
 
-#### simple_event.c
-
-The following features are covered in this example:
-
- * Register a port
- * Connect the port to a node
- * Emit an event from the port
-
-To run this project, run the following command after compilation: `./build/linvoke-simple-event`
-
-#### simple_event_with_data.c
-
-The following features are covered in this example:
-
- * Register a port
- * Connect the port to a node with custom user data provided
- * Emit an event from the port
-
-To run this project, run the following command after compilation: `./build/linvoke-simple-event-with-data`
-
-#### simple_event_with_data_override.c
-
-The following features are covered in this example:
-
- * Register a port
- * Connect the port to a node with custom user data provided
- * Emit an event from the port and override the connected user data with new data
-
-To run this project, run the following command after compilation: `./build/linvoke-simple-event-with-data-override`
-
-#### multi_node_event.c
-
-The following features are covered in this example:
-
- * Register a port
- * Connect the port to multiple nodes
- * Emit an event from the port that will trigger all connected nodes
-
-To run this example project, run the following command after compilation: `./build/linvoke-multi-node-event`
-
-#### multi_port_multi_node_event.c
-
-The following features are covered in this example:
-
- * Register a port
- * Connect multiple ports to multiple nodes
- * Emit an events from the registered ports that will trigger all connected nodes
-
-To run this example project, run the following command after compilation: `./build/linvoke-multi-port-multi-node-event`
+| Project File                      | Description                                                                                                                     | Executable Name                                 |
+| ---                               | ---                                                                                                                             | ---                                             |
+| simple_event.c                    | Registers a port, connects a node to the port, and emits an event from the port.                                                | ./build/linvoke-simple-event                    |
+| simple_event_with_data.c          | Same as simple_event.c, but connects custom user data to the node.                                                              | ./build/linvoke-simple-event-with-data          |
+| simple_event_with_data_override.c | Same as simple_event_with_data.c, but overrides the connected user data when emitting the event.                                | ./build/linvoke-simple-event-with-data-override |
+| multi_node_event.c                | Registers a port, connects multiple nodes to the port, and emits an event from the port.                                        | ./build/linvoke-multi-node-event                |
+| multi_port_multi_node_event.c     | Registers multiple ports, connects multiple nodes to each port (with and without user data), and emits an event from each port. | ./build/linvoke-multi-port-multi-node-event     |
 
 ## Build Instructions
 
