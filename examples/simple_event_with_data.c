@@ -14,7 +14,7 @@
 #include <linvoke.h>
 
 /**
- * @brief Prints the ID of the port that emitted the event
+ * @brief Prints the ID of the port that emitted the event, as well as the user data that was passed
  */
 void node_callback(linvoke_event_s *event)
 {
@@ -35,11 +35,11 @@ int main(void)
     linvoke_register_port(linvoke, port);
 
     // Connect the port to the node and add some user data
-    const char *string_data = "Hello, World!";
-    linvoke_connect_with_data(linvoke, port, node_callback, &string_data);
+    linvoke_connect(linvoke, port, node_callback);
 
     // Emit the event from the port
-    linvoke_emit(linvoke, port);
+    const char *string_data = "Hello, World!";
+    linvoke_emit(linvoke, port, &string_data);
 
     // Destroy the linvoke object to free the used resources
     linvoke_destroy(linvoke);

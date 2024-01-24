@@ -37,7 +37,7 @@ int main(void)
     linvoke_connect(linvoke, port, node_callback);
 
     // Emit the event from the port
-    linvoke_emit(linvoke, port);
+    linvoke_emit(linvoke, port, NULL);
 
     // Destroy the linvoke object to free the used resources
     linvoke_destroy(linvoke);

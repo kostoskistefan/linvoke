@@ -15,7 +15,6 @@
 #include <stddef.h>
 #include <setjmp.h>
 #include <cmocka.h>
-#include <stdio.h>
 
 void mock_node1(linvoke_event_s *event)
 {
@@ -36,19 +35,6 @@ void mock_node_with_data(linvoke_event_s *event)
     // by one function. Therefore, we can directly test the port_id and user data here.
     assert_int_equal(port_id, 36);
     assert_string_equal(data, "Some string data");
-
-    function_called();
-}
-
-void mock_node_with_overriden_data(linvoke_event_s *event)
-{
-    const uint32_t port_id = linvoke_event_get_port_id(event);
-    const char *data = *((const char **)linvoke_event_get_user_data(event));
-
-    // This mock node is only used for testing the data inside the event, and is only called
-    // by one function. Therefore, we can directly test the port_id and user data here.
-    assert_int_equal(port_id, 28);
-    assert_string_equal(data, "Some overriden string data");
 
     function_called();
 }
@@ -79,7 +65,7 @@ static void test_one_port_one_node(void **state)
     // Since only 1 node is connected, when we emit the port, we expect only 1 node
     expect_function_calls(mock_node1, 1);
 
-    linvoke_emit(linvoke, port_id);
+    linvoke_emit(linvoke, port_id, NULL);
 
     linvoke_destroy(linvoke);
 }
@@ -112,7 +98,7 @@ static void test_one_port_multiple_same_nodes(void **state)
     // Since only 1 node is connected, when we emit the port, we expect only 1 node
     expect_function_calls(mock_node1, 1);
 
-    linvoke_emit(linvoke, port_id);
+    linvoke_emit(linvoke, port_id, NULL);
 
     linvoke_destroy(linvoke);
 }
@@ -145,7 +131,7 @@ static void test_one_port_multiple_different_nodes(void **state)
     expect_function_calls(mock_node1, 1);
     expect_function_calls(mock_node2, 1);
 
-    linvoke_emit(linvoke, port_id);
+    linvoke_emit(linvoke, port_id, NULL);
 
     linvoke_destroy(linvoke);
 }
@@ -186,8 +172,8 @@ static void test_multiple_ports_same_id_one_node(void **state)
     // (both port1_id and port2_id) will call the mock_node1 twice
     expect_function_calls(mock_node1, 2);
 
-    linvoke_emit(linvoke, port1_id);
-    linvoke_emit(linvoke, port2_id);
+    linvoke_emit(linvoke, port1_id, NULL);
+    linvoke_emit(linvoke, port2_id, NULL);
 
     linvoke_destroy(linvoke);
 }
@@ -238,8 +224,8 @@ static void test_multiple_ports_same_id_multiple_same_node(void **state)
     // (both port1_id and port2_id) will call the mock_node1 twice
     expect_function_calls(mock_node1, 2);
 
-    linvoke_emit(linvoke, port1_id);
-    linvoke_emit(linvoke, port2_id);
+    linvoke_emit(linvoke, port1_id, NULL);
+    linvoke_emit(linvoke, port2_id, NULL);
 
     linvoke_destroy(linvoke);
 }
@@ -316,14 +302,14 @@ static void test_multiple_ports_same_id_multiple_different_node(void **state)
     expect_function_calls(mock_node1, 1);
     expect_function_calls(mock_node2, 1);
 
-    linvoke_emit(linvoke, port1_id);
+    linvoke_emit(linvoke, port1_id, NULL);
 
     // Because both nodes have the same id, emitting the port with id == port2_id
     // will call the mock_node1 and mock_node2
     expect_function_calls(mock_node1, 1);
     expect_function_calls(mock_node2, 1);
 
-    linvoke_emit(linvoke, port2_id);
+    linvoke_emit(linvoke, port2_id, NULL);
 
     linvoke_destroy(linvoke);
 }
@@ -361,8 +347,8 @@ static void test_multiple_ports_different_id_one_node(void **state)
 
     // Emitting both ports will call mock_node1 one time each, so 2 total
     expect_function_calls(mock_node1, 2);
-    linvoke_emit(linvoke, port1_id);
-    linvoke_emit(linvoke, port2_id);
+    linvoke_emit(linvoke, port1_id, NULL);
+    linvoke_emit(linvoke, port2_id, NULL);
 
     linvoke_destroy(linvoke);
 }
@@ -412,8 +398,8 @@ static void test_multiple_ports_different_id_multiple_same_node(void **state)
 
     // Emitting both ports will call mock_node1 one time each, so 2 total
     expect_function_calls(mock_node1, 2);
-    linvoke_emit(linvoke, port1_id);
-    linvoke_emit(linvoke, port2_id);
+    linvoke_emit(linvoke, port1_id, NULL);
+    linvoke_emit(linvoke, port2_id, NULL);
 
     linvoke_destroy(linvoke);
 }
@@ -488,12 +474,12 @@ static void test_multiple_ports_different_id_multiple_different_node(void **stat
     // Emitting port 1 will call mock_node1 and mock_node2
     expect_function_calls(mock_node1, 1);
     expect_function_calls(mock_node2, 1);
-    linvoke_emit(linvoke, port1_id);
+    linvoke_emit(linvoke, port1_id, NULL);
 
     // Emitting port 2 will call mock_node1 and mock_node2
     expect_function_calls(mock_node1, 1);
     expect_function_calls(mock_node2, 1);
-    linvoke_emit(linvoke, port2_id);
+    linvoke_emit(linvoke, port2_id, NULL);
 
     linvoke_destroy(linvoke);
 }
@@ -516,8 +502,7 @@ static void test_one_port_one_node_with_data(void **state)
     // The port should have 0 nodes connected
     assert_int_equal(linvoke_get_node_count(linvoke, port_id), 0);
 
-    const char *event_data = "Some string data";
-    linvoke_connect_with_data(linvoke, port_id, mock_node_with_data, &event_data);
+    linvoke_connect(linvoke, port_id, mock_node_with_data);
 
     // The port should have 1 node connected
     assert_int_equal(linvoke_get_node_count(linvoke, port_id), 1);
@@ -525,40 +510,8 @@ static void test_one_port_one_node_with_data(void **state)
     // Since only 1 node is connected, when we emit the port, we expect only 1 node
     expect_function_calls(mock_node_with_data, 1);
 
-    linvoke_emit(linvoke, port_id);
-
-    linvoke_destroy(linvoke);
-}
-
-static void test_one_port_one_node_with_data_override(void **state)
-{
-    (void) state; // unused
-
-    linvoke_s *linvoke = linvoke_create();
-
-    // There should be 0 port registered
-    assert_int_equal(linvoke_get_registered_port_count(linvoke), 0);
-
-    const uint32_t port_id = 28;
-    linvoke_register_port(linvoke, port_id);
-
-    // There should be 1 port registered
-    assert_int_equal(linvoke_get_registered_port_count(linvoke), 1);
-
-    // The port should have 0 nodes connected
-    assert_int_equal(linvoke_get_node_count(linvoke, port_id), 0);
-
     const char *event_data = "Some string data";
-    linvoke_connect_with_data(linvoke, port_id, mock_node_with_overriden_data, &event_data);
-
-    // The port should have 1 node connected
-    assert_int_equal(linvoke_get_node_count(linvoke, port_id), 1);
-
-    // Since only 1 node is connected, when we emit the port, we expect only 1 node
-    expect_function_calls(mock_node_with_overriden_data, 1);
-
-    const char *event_data_overriden = "Some overriden string data";
-    linvoke_emit_with_data(linvoke, port_id, &event_data_overriden);
+    linvoke_emit(linvoke, port_id, &event_data);
 
     linvoke_destroy(linvoke);
 }
@@ -568,7 +521,6 @@ int main(void)
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_one_port_one_node),
         cmocka_unit_test(test_one_port_one_node_with_data),
-        cmocka_unit_test(test_one_port_one_node_with_data_override),
         cmocka_unit_test(test_one_port_multiple_same_nodes),
         cmocka_unit_test(test_one_port_multiple_different_nodes),
         cmocka_unit_test(test_multiple_ports_same_id_one_node),

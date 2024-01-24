@@ -41,19 +41,9 @@ if get_option('compile_examples')
     'examples/simple_event_with_data.c',
     dependencies: [linvoke_dep],
   )
-  linvoke_example_simple_event_with_data_override_executable = executable(
-    'linvoke-simple-event-with-data-override',
-    'examples/simple_event_with_data_override.c',
-    dependencies: [linvoke_dep],
-  )
   linvoke_example_multi_node_event_executable = executable(
     'linvoke-multi-node-event',
     'examples/multi_node_event.c',
-    dependencies: [linvoke_dep],
-  )
-  linvoke_multi_port_multi_node_event_example_executable = executable(
-    'linvoke-multi-port-multi-node-event',
-    'examples/multi_port_multi_node_event.c',
     dependencies: [linvoke_dep],
   )
 endif

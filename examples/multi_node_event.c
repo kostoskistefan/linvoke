@@ -29,6 +29,14 @@ void node_callback2(linvoke_event_s *event)
     printf("Hello from node_callback2\n");
 }
 
+/**
+ * @brief Prints the name of the node callback function
+ */
+void node_callback3(linvoke_event_s *event)
+{
+    printf("Hello from node_callback3\n");
+}
+
 int main(void)
 {
     // Create a linvoke object
@@ -45,9 +53,10 @@ int main(void)
     // the nodes will be called in the same order as they were connected
     linvoke_connect(linvoke, port, node_callback1);
     linvoke_connect(linvoke, port, node_callback2);
+    linvoke_connect(linvoke, port, node_callback3);
 
     // Emit the event from the port
-    linvoke_emit(linvoke, port);
+    linvoke_emit(linvoke, port, NULL);
 
     // Destroy the linvoke object to free the used resources
     linvoke_destroy(linvoke);
