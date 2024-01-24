@@ -1,5 +1,5 @@
 /**
- * @file:      simple_event.c
+ * @file:      multi_slot_event.c
  *
  * @date:      22 January 2024
  *
@@ -14,11 +14,27 @@
 #include <linvoke.h>
 
 /**
- * @brief Prints the ID of the signal that emitted the event
+ * @brief Prints the name of the slot
  */
-void slot(linvoke_event_s *event)
+void slot1(linvoke_event_s *event)
 {
-    printf("Hello, World!\n");
+    printf("Hello from slot1\n");
+}
+
+/**
+ * @brief Prints the name of the slot
+ */
+void slot2(linvoke_event_s *event)
+{
+    printf("Hello from slot2\n");
+}
+
+/**
+ * @brief Prints the name of the slot
+ */
+void slot3(linvoke_event_s *event)
+{
+    printf("Hello from slot3\n");
 }
 
 int main(void)
@@ -32,8 +48,12 @@ int main(void)
     // Register the signal ID
     linvoke_register_signal(linvoke, signal);
 
-    // Connect the signal to the slot
-    linvoke_connect(linvoke, signal, slot);
+    // Connect the signal to the slots
+    // Order does play a role here. When the event is emitted, the
+    // slots will be called in the same order as they were connected
+    linvoke_connect(linvoke, signal, slot1);
+    linvoke_connect(linvoke, signal, slot2);
+    linvoke_connect(linvoke, signal, slot3);
 
     // Emit an event from the signal
     linvoke_emit(linvoke, signal, NULL);

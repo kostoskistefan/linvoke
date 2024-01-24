@@ -41,9 +41,9 @@ if get_option('compile_examples')
     'examples/simple_event_with_data.c',
     dependencies: [linvoke_dep],
   )
-  linvoke_example_multi_node_event_executable = executable(
-    'linvoke-multi-node-event',
-    'examples/multi_node_event.c',
+  linvoke_example_multi_slot_event_executable = executable(
+    'linvoke-multi-slot-event',
+    'examples/multi_slot_event.c',
     dependencies: [linvoke_dep],
   )
 endif

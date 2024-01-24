@@ -14,63 +14,77 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifndef LINVOKE_PORT_ARRAY_BLOCK_SIZE
-#define LINVOKE_PORT_ARRAY_BLOCK_SIZE 8
+/**
+ * @def LINVOKE_SIGNAL_ARRAY_BLOCK_SIZE
+ * @brief The default block size for the signal array.
+ *        Used for allocating and reallocating memory for the signal array.
+ *        Smaller value will use less memory, but it will result in more frequent reallocations.
+ *        Bigger value will use more memory, but it will result in less frequent reallocations.
+ */
+#ifndef LINVOKE_SIGNAL_ARRAY_BLOCK_SIZE
+#define LINVOKE_SIGNAL_ARRAY_BLOCK_SIZE 8
 #endif
 
-#ifndef LINVOKE_NODE_ARRAY_BLOCK_SIZE
-#define LINVOKE_NODE_ARRAY_BLOCK_SIZE 8
+/**
+ * @def LINVOKE_SLOT_ARRAY_BLOCK_SIZE
+ * @brief The default block size for the slot array.
+ *        Used for allocating and reallocating memory for the slots array in each connected signal.
+ *        Smaller value will use less memory, but it will result in more frequent reallocations.
+ *        Bigger value will use more memory, but it will result in less frequent reallocations.
+ */
+#ifndef LINVOKE_SLOT_ARRAY_BLOCK_SIZE
+#define LINVOKE_SLOT_ARRAY_BLOCK_SIZE 8
 #endif
 
 /**
  * @struct linvoke_event_s
  * @brief Structure that holds the data for an event
- * @var port_id The ID of the port that emitted the event
+ * @var signal_id The ID of the signal that emitted the event
  * @var user_data The user data that was passed when the event was emitted
  */
 struct linvoke_event_s
 {
-    uint32_t port_id;
+    uint32_t signal_id;
     void *user_data;
 };
 
 /**
- * @struct linvoke_port_s
- * @brief Structure that holds information about a port
- * @var id The ID of the port
- * @var nodes An array of pointers to nodes that are connected to the port
- * @var connected_node_count The number of nodes that are connected to the port
- * @var node_capacity The maximum capacity of the nodes array
+ * @struct linvoke_signal_s
+ * @brief Structure that holds information about a signal
+ * @var id The ID of the signal
+ * @var slots An array of pointers to slots that are connected to the signal
+ * @var connected_slot_count The number of slots that are currently connected to the signal
+ * @var slot_capacity The maximum capacity of the slots array
  */
-struct linvoke_port_s
+struct linvoke_signal_s
 {
     uint32_t id;
-    linvoke_node_pointer *nodes;
-    uint32_t connected_node_count;
-    uint32_t node_capacity;
+    linvoke_slot_pointer *slots;
+    uint32_t connected_slot_count;
+    uint32_t slot_capacity;
 };
 
 /**
  * @struct linvoke_s
  * @brief Structure that holds information about a linvoke object
- * @var ports An array holding the registered ports
- * @var registered_port_count The number of ports that are registered within the linvoke object
- * @var port_capacity The maximum capacity of the ports array
+ * @var signals An array of registered signals
+ * @var registered_signal_count The number of signals that are registered within the linvoke object
+ * @var signal_capacity The maximum capacity of the signals array
  */
 struct linvoke_s
 {
-    linvoke_port_s *ports;
-    uint32_t registered_port_count;
-    uint32_t port_capacity;
+    linvoke_signal_s *signals;
+    uint32_t registered_signal_count;
+    uint32_t signal_capacity;
 };
 
 /**
- * @brief Finds a port with a given ID if it exists
+ * @brief Finds a signal with a given ID if it exists
  * @param linvoke Pointer to a linvoke object
- * @param port_id The ID of the port to find
- * @return A pointer to the port with the given ID or NULL if no such port was found
+ * @param signal_id The ID of the signal to find
+ * @return A pointer to the signal with the given ID or NULL if no such signal was found
  */
-linvoke_port_s *linvoke_find_port(linvoke_s *const linvoke, uint32_t port_id);
+linvoke_signal_s *linvoke_find_signal(linvoke_s *const linvoke, uint32_t signal_id);
 
 linvoke_s *linvoke_create(void)
 {
@@ -82,173 +96,173 @@ linvoke_s *linvoke_create(void)
         return NULL;
     }
 
-    linvoke->ports = malloc(LINVOKE_PORT_ARRAY_BLOCK_SIZE * sizeof(*linvoke->ports));
+    linvoke->signals = malloc(LINVOKE_SIGNAL_ARRAY_BLOCK_SIZE * sizeof(*linvoke->signals));
 
-    if (linvoke->ports == NULL)
+    if (linvoke->signals == NULL)
     {
-        fprintf(stderr, "Failed to allocate memory for the linvoke ports.\n");
+        fprintf(stderr, "Failed to allocate memory for the linvoke signals.\n");
         free(linvoke);
         return NULL;
     }
 
-    linvoke->registered_port_count = 0;
-    linvoke->port_capacity = LINVOKE_PORT_ARRAY_BLOCK_SIZE;
+    linvoke->registered_signal_count = 0;
+    linvoke->signal_capacity = LINVOKE_SIGNAL_ARRAY_BLOCK_SIZE;
 
     return linvoke;
 }
 
 void linvoke_destroy(linvoke_s *const linvoke)
 {
-    for (uint32_t i = 0; i < linvoke->registered_port_count; ++i)
+    for (uint32_t i = 0; i < linvoke->registered_signal_count; ++i)
     {
-        free(linvoke->ports[i].nodes);
+        free(linvoke->signals[i].slots);
     }
 
-    free(linvoke->ports);
+    free(linvoke->signals);
     free(linvoke);
 }
 
-void linvoke_register_port(linvoke_s *const linvoke, uint32_t port_id)
+void linvoke_register_signal(linvoke_s *const linvoke, uint32_t signal_id)
 {
-    // Check if there is an existing port with the same ID
-    if (linvoke_find_port(linvoke, port_id) != NULL)
+    // Check if there is an existing signal with the same ID
+    if (linvoke_find_signal(linvoke, signal_id) != NULL)
     {
-        fprintf(stderr, "A port with id %u already exists.\n", port_id);
+        fprintf(stderr, "A signal with id %u already exists.\n", signal_id);
         return;
     }
 
-    // Reallocate the ports array memory if the capacity is full
-    if (linvoke->registered_port_count == linvoke->port_capacity)
+    // Reallocate the signals array memory if the capacity is full
+    if (linvoke->registered_signal_count == linvoke->signal_capacity)
     {
-        linvoke->port_capacity += LINVOKE_PORT_ARRAY_BLOCK_SIZE;
-        linvoke_port_s *reallocated_ports = realloc(linvoke->ports, linvoke->port_capacity * sizeof(*linvoke->ports));
+        linvoke->signal_capacity += LINVOKE_SIGNAL_ARRAY_BLOCK_SIZE;
+        linvoke_signal_s *reallocated_signals = realloc(linvoke->signals, linvoke->signal_capacity * sizeof(*linvoke->signals));
 
-        if (reallocated_ports == NULL)
+        if (reallocated_signals == NULL)
         {
-            fprintf(stderr, "Failed to reallocate memory for the ports array.\n");
+            fprintf(stderr, "Failed to reallocate memory for the signals array.\n");
             return;
         }
 
-        linvoke->ports = reallocated_ports;
+        linvoke->signals = reallocated_signals;
     }
 
-    // Register the new port
-    linvoke_port_s *const port = &linvoke->ports[linvoke->registered_port_count];
-    port->id = port_id;
-    port->connected_node_count = 0;
-    port->node_capacity = LINVOKE_NODE_ARRAY_BLOCK_SIZE;
-    port->nodes = malloc(LINVOKE_NODE_ARRAY_BLOCK_SIZE * sizeof(*port->nodes));
+    // Register the new signal
+    linvoke_signal_s *const signal = &linvoke->signals[linvoke->registered_signal_count];
+    signal->id = signal_id;
+    signal->connected_slot_count = 0;
+    signal->slot_capacity = LINVOKE_SLOT_ARRAY_BLOCK_SIZE;
+    signal->slots = malloc(LINVOKE_SLOT_ARRAY_BLOCK_SIZE * sizeof(*signal->slots));
 
-    if (port->nodes == NULL)
+    if (signal->slots == NULL)
     {
-        fprintf(stderr, "Failed to allocate memory for the port nodes.\n");
+        fprintf(stderr, "Failed to allocate memory for the signal slots.\n");
         return;
     }
 
-    ++linvoke->registered_port_count;
+    ++linvoke->registered_signal_count;
 }
 
-void linvoke_connect(linvoke_s *const linvoke, const uint32_t port_id, linvoke_node_pointer node)
+void linvoke_connect(linvoke_s *const linvoke, const uint32_t signal_id, linvoke_slot_pointer slot)
 {
-    // Find the port with the given ID
-    linvoke_port_s *const port = linvoke_find_port(linvoke, port_id);
+    // Find the signal with the given ID
+    linvoke_signal_s *const signal = linvoke_find_signal(linvoke, signal_id);
 
-    // Port not found
-    if (port == NULL)
+    // Signal not found
+    if (signal == NULL)
     {
-        fprintf(stderr, "A port with id %u does not exist.\n", port_id);
+        fprintf(stderr, "A signal with id %u does not exist.\n", signal_id);
         return;
     }
 
     // Check if the callback is already connected
-    for (uint32_t j = 0; j < port->connected_node_count; ++j)
+    for (uint32_t j = 0; j < signal->connected_slot_count; ++j)
     {
-        if (port->nodes[j] == node)
+        if (signal->slots[j] == slot)
         {
-            fprintf(stderr, "The callback function is already connected to port %d\n", port_id);
+            fprintf(stderr, "The callback function is already connected to signal %d\n", signal_id);
             return;
         }
     }
 
-    // Reallocate the nodes array memory if the capacity is full
-    if (port->connected_node_count == port->node_capacity)
+    // Reallocate the slots array memory if the capacity is full
+    if (signal->connected_slot_count == signal->slot_capacity)
     {
-        port->node_capacity += LINVOKE_NODE_ARRAY_BLOCK_SIZE;
+        signal->slot_capacity += LINVOKE_SLOT_ARRAY_BLOCK_SIZE;
 
-        linvoke_node_pointer *reallocated_nodes = realloc(port->nodes, port->node_capacity * sizeof(*port->nodes));
+        linvoke_slot_pointer *reallocated_slots = realloc(signal->slots, signal->slot_capacity * sizeof(*signal->slots));
 
-        if (reallocated_nodes == NULL)
+        if (reallocated_slots == NULL)
         {
-            fprintf(stderr, "Failed to reallocate memory for the nodes array.\n");
+            fprintf(stderr, "Failed to reallocate memory for the slots array.\n");
             return;
         }
 
-        port->nodes = reallocated_nodes;
+        signal->slots = reallocated_slots;
     }
 
-    // Connect the node
-    port->nodes[port->connected_node_count] = node;
+    // Connect the slot
+    signal->slots[signal->connected_slot_count] = slot;
 
-    ++port->connected_node_count;
+    ++signal->connected_slot_count;
 }
 
-void linvoke_emit(linvoke_s *const linvoke, const uint32_t port_id, void *user_data)
+void linvoke_emit(linvoke_s *const linvoke, const uint32_t signal_id, void *user_data)
 {
-    // Find the port with the given ID
-    linvoke_port_s *const port = linvoke_find_port(linvoke, port_id);
+    // Find the signal with the given ID
+    linvoke_signal_s *const signal = linvoke_find_signal(linvoke, signal_id);
 
-    // Port not found
-    if (port == NULL)
+    // Signal not found
+    if (signal == NULL)
     {
-        fprintf(stderr, "A port with id %u does not exist.\n", port_id);
+        fprintf(stderr, "A signal with id %u does not exist.\n", signal_id);
         return;
     }
 
-    linvoke_event_s event = { .port_id = port_id, .user_data = user_data };
+    linvoke_event_s event = { .signal_id = signal_id, .user_data = user_data };
 
-    // Call the callback function for all nodes connected to the port and override the user data
-    for (size_t j = 0; j < port->connected_node_count; ++j)
+    // Call the callback function for all slots connected to the signal and override the user data
+    for (size_t j = 0; j < signal->connected_slot_count; ++j)
     {
-        port->nodes[j](&event);
+        signal->slots[j](&event);
     }
 }
 
-linvoke_port_s *linvoke_find_port(linvoke_s *const linvoke, uint32_t port_id)
+linvoke_signal_s *linvoke_find_signal(linvoke_s *const linvoke, uint32_t signal_id)
 {
-    for (uint32_t i = 0; i < linvoke->registered_port_count; ++i)
+    for (uint32_t i = 0; i < linvoke->registered_signal_count; ++i)
     {
-        if (linvoke->ports[i].id == port_id)
+        if (linvoke->signals[i].id == signal_id)
         {
-            return &linvoke->ports[i];
+            return &linvoke->signals[i];
         }
     }
 
     return NULL;
 }
 
-uint32_t linvoke_get_registered_port_count(linvoke_s *const linvoke)
+uint32_t linvoke_get_registered_signal_count(linvoke_s *const linvoke)
 {
-    return linvoke->registered_port_count;
+    return linvoke->registered_signal_count;
 }
 
-uint32_t linvoke_get_node_count(linvoke_s *const linvoke, const uint32_t port_id)
+uint32_t linvoke_get_slot_count(linvoke_s *const linvoke, const uint32_t signal_id)
 {
-    // Find the port with the given ID
-    linvoke_port_s *const port = linvoke_find_port(linvoke, port_id);
+    // Find the signal with the given ID
+    linvoke_signal_s *const signal = linvoke_find_signal(linvoke, signal_id);
 
-    // Port not found
-    if (port == NULL)
+    // Signal not found
+    if (signal == NULL)
     {
-        fprintf(stderr, "Port with id %u not found.\n", port_id);
+        fprintf(stderr, "Signal with id %u not found.\n", signal_id);
         return 0;
     }
 
-    return port->connected_node_count;
+    return signal->connected_slot_count;
 }
 
-uint32_t linvoke_event_get_port_id(linvoke_event_s *const event)
+uint32_t linvoke_event_get_signal_id(linvoke_event_s *const event)
 {
-    return event->port_id;
+    return event->signal_id;
 }
 
 void *linvoke_event_get_user_data(linvoke_event_s *const event)

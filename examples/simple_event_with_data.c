@@ -14,13 +14,13 @@
 #include <linvoke.h>
 
 /**
- * @brief Prints the ID of the port that emitted the event, as well as the user data that was passed
+ * @brief Prints the ID of the signal that emitted the event, as well as the included user data
  */
-void node_callback(linvoke_event_s *event)
+void slot(linvoke_event_s *event)
 {
-    const uint32_t port_id = linvoke_event_get_port_id(event);
+    const uint32_t signal_id = linvoke_event_get_signal_id(event);
     const char *data = *((const char **) linvoke_event_get_user_data(event));
-    printf("Port ID: %u\tData: %s\n", port_id, data);
+    printf("Signal ID: %u, Data: %s\n", signal_id, data);
 }
 
 int main(void)
@@ -28,18 +28,18 @@ int main(void)
     // Create a linvoke object
     linvoke_s *linvoke = linvoke_create();
 
-    // Define unique ID for the port that are going to be registered inside linvoke
-    const uint32_t port = 123;
+    // Define a unique ID for the signal that is going to be registered
+    const uint32_t signal = 123;
 
-    // Register the port ID
-    linvoke_register_port(linvoke, port);
+    // Register the signal ID
+    linvoke_register_signal(linvoke, signal);
 
-    // Connect the port to the node and add some user data
-    linvoke_connect(linvoke, port, node_callback);
+    // Connect the signal to the slot
+    linvoke_connect(linvoke, signal, slot);
 
-    // Emit the event from the port
-    const char *string_data = "Hello, World!";
-    linvoke_emit(linvoke, port, &string_data);
+    // Emit an event from the signal with custom user data
+    const char *string_data = "This data doesn't have to be of type string. It can be anything you want!";
+    linvoke_emit(linvoke, signal, &string_data);
 
     // Destroy the linvoke object to free the used resources
     linvoke_destroy(linvoke);
