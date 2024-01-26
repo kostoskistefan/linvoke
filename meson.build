@@ -4,7 +4,8 @@ project(
   version: '1.0.0',
   license: 'MIT',
   default_options: [
-    'default_library=static'
+    'default_library=static',
+    'warning_level=3'
   ],
 )
 

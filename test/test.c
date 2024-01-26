@@ -18,11 +18,13 @@
 
 void mock_slot1(linvoke_event_s *event)
 {
+    (void) event; // Unused
     function_called();
 }
 
 void mock_slot2(linvoke_event_s *event)
 {
+    (void) event; // Unused
     function_called();
 }
 

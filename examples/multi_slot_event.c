@@ -18,6 +18,7 @@
  */
 void slot1(linvoke_event_s *event)
 {
+    (void) event; // Unused
     printf("Hello from slot1\n");
 }
 
@@ -26,6 +27,7 @@ void slot1(linvoke_event_s *event)
  */
 void slot2(linvoke_event_s *event)
 {
+    (void) event; // Unused
     printf("Hello from slot2\n");
 }
 
@@ -34,6 +36,7 @@ void slot2(linvoke_event_s *event)
  */
 void slot3(linvoke_event_s *event)
 {
+    (void) event; // Unused
     printf("Hello from slot3\n");
 }
 

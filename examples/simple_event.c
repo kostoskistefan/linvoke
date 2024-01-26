@@ -18,6 +18,7 @@
  */
 void slot(linvoke_event_s *event)
 {
+    (void) event; // Unused
     printf("Hello, World!\n");
 }
 
