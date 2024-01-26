@@ -28,7 +28,7 @@ void mock_slot2(linvoke_event_s *event)
 
 void mock_slot_with_data(linvoke_event_s *event)
 {
-    const uint32_t signal_id = linvoke_event_get_signal_id(event);
+    const linvoke_signal signal_id = linvoke_event_get_signal_id(event);
     const char *data = *((const char **)linvoke_event_get_user_data(event));
 
     // This mock slot is only used for testing the data inside the event, and is only called
@@ -48,7 +48,7 @@ static void test_one_signal_one_slot(void **state)
     // There should be 0 signals registered
     assert_int_equal(linvoke_get_registered_signal_count(linvoke), 0);
 
-    const uint32_t signal_id = 0;
+    const linvoke_signal signal_id = 0;
     linvoke_register_signal(linvoke, signal_id);
 
     // There should be 1 signal registered
@@ -79,7 +79,7 @@ static void test_one_signal_multiple_same_slots(void **state)
     // There should be 0 signals registered
     assert_int_equal(linvoke_get_registered_signal_count(linvoke), 0);
 
-    const uint32_t signal_id = 0;
+    const linvoke_signal signal_id = 0;
     linvoke_register_signal(linvoke, signal_id);
 
     // There should be 1 signal registered
@@ -112,7 +112,7 @@ static void test_one_signal_multiple_different_slots(void **state)
     // There should be 0 signals registered
     assert_int_equal(linvoke_get_registered_signal_count(linvoke), 0);
 
-    const uint32_t signal_id = 0;
+    const linvoke_signal signal_id = 0;
     linvoke_register_signal(linvoke, signal_id);
 
     // There should be 1 signal registered
@@ -145,8 +145,8 @@ static void test_multiple_signals_same_id_one_slot(void **state)
     // There should be 0 signals registered
     assert_int_equal(linvoke_get_registered_signal_count(linvoke), 0);
 
-    const uint32_t signal1_id = 0;
-    const uint32_t signal2_id = 0;
+    const linvoke_signal signal1_id = 0;
+    const linvoke_signal signal2_id = 0;
     linvoke_register_signal(linvoke, signal1_id);
     linvoke_register_signal(linvoke, signal2_id);
 
@@ -187,8 +187,8 @@ static void test_multiple_signals_same_id_multiple_same_slot(void **state)
     // There should be 0 signals registered
     assert_int_equal(linvoke_get_registered_signal_count(linvoke), 0);
 
-    const uint32_t signal1_id = 0;
-    const uint32_t signal2_id = 0;
+    const linvoke_signal signal1_id = 0;
+    const linvoke_signal signal2_id = 0;
     linvoke_register_signal(linvoke, signal1_id);
     linvoke_register_signal(linvoke, signal2_id);
 
@@ -239,8 +239,8 @@ static void test_multiple_signals_same_id_multiple_different_slot(void **state)
     // There should be 0 signals registered
     assert_int_equal(linvoke_get_registered_signal_count(linvoke), 0);
 
-    const uint32_t signal1_id = 0;
-    const uint32_t signal2_id = 0;
+    const linvoke_signal signal1_id = 0;
+    const linvoke_signal signal2_id = 0;
     linvoke_register_signal(linvoke, signal1_id);
     linvoke_register_signal(linvoke, signal2_id);
 
@@ -323,8 +323,8 @@ static void test_multiple_signals_different_id_one_slot(void **state)
     // There should be 0 signals registered
     assert_int_equal(linvoke_get_registered_signal_count(linvoke), 0);
 
-    const uint32_t signal1_id = 0;
-    const uint32_t signal2_id = 1;
+    const linvoke_signal signal1_id = 0;
+    const linvoke_signal signal2_id = 1;
     linvoke_register_signal(linvoke, signal1_id);
     linvoke_register_signal(linvoke, signal2_id);
 
@@ -362,8 +362,8 @@ static void test_multiple_signals_different_id_multiple_same_slot(void **state)
     // There should be 0 signals registered
     assert_int_equal(linvoke_get_registered_signal_count(linvoke), 0);
 
-    const uint32_t signal1_id = 0;
-    const uint32_t signal2_id = 1;
+    const linvoke_signal signal1_id = 0;
+    const linvoke_signal signal2_id = 1;
     linvoke_register_signal(linvoke, signal1_id);
     linvoke_register_signal(linvoke, signal2_id);
 
@@ -413,8 +413,8 @@ static void test_multiple_signals_different_id_multiple_different_slot(void **st
     // There should be 0 signals registered
     assert_int_equal(linvoke_get_registered_signal_count(linvoke), 0);
 
-    const uint32_t signal1_id = 0;
-    const uint32_t signal2_id = 1;
+    const linvoke_signal signal1_id = 0;
+    const linvoke_signal signal2_id = 1;
     linvoke_register_signal(linvoke, signal1_id);
     linvoke_register_signal(linvoke, signal2_id);
 
@@ -493,7 +493,7 @@ static void test_one_signal_one_slot_with_data(void **state)
     // There should be 0 signals registered
     assert_int_equal(linvoke_get_registered_signal_count(linvoke), 0);
 
-    const uint32_t signal_id = 36;
+    const linvoke_signal signal_id = 36;
     linvoke_register_signal(linvoke, signal_id);
 
     // There should be 1 signal registered

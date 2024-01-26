@@ -21,12 +21,6 @@
 typedef struct linvoke_s linvoke_s;
 
 /**
- * @struct linvoke_signal_s
- * @brief Structure that holds information about a signal
- */
-typedef struct linvoke_signal_s linvoke_signal_s;
-
-/**
  * @struct linvoke_event_s
  * @brief Structure that holds the data for an event
  */
@@ -37,6 +31,12 @@ typedef struct linvoke_event_s linvoke_event_s;
  * @brief Pointer to a function that will be called when an event is emitted
  */
 typedef void (*linvoke_slot_pointer)(linvoke_event_s *event);
+
+/**
+ * @typedef linvoke_signal
+ * @brief The ID of a signal
+ */
+typedef uint32_t linvoke_signal;
 
 /**
  * @fn linvoke_create
@@ -58,7 +58,7 @@ void linvoke_destroy(linvoke_s *const linvoke);
  * @param linvoke Pointer to a linvoke object
  * @param signal_id The ID of the signal that will be registered
  */
-void linvoke_register_signal(linvoke_s *const linvoke, uint32_t signal_id);
+void linvoke_register_signal(linvoke_s *const linvoke, const linvoke_signal signal_id);
 
 /**
  * @fn linvoke_connect
@@ -67,7 +67,7 @@ void linvoke_register_signal(linvoke_s *const linvoke, uint32_t signal_id);
  * @param signal_id The ID of the signal to which the slot will be connected
  * @param slot The slot that will be called when an event is emitted
  */
-void linvoke_connect(linvoke_s *const linvoke, const uint32_t signal_id, linvoke_slot_pointer slot);
+void linvoke_connect(linvoke_s *const linvoke, const linvoke_signal signal_id, linvoke_slot_pointer slot);
 
 /**
  * @fn linvoke_emit
@@ -76,7 +76,7 @@ void linvoke_connect(linvoke_s *const linvoke, const uint32_t signal_id, linvoke
  * @param signal_id The ID of the signal which will emit an event
  * @param user_data The user data that will be passed to the connected slots. Can be NULL
  */
-void linvoke_emit(linvoke_s *const linvoke, const uint32_t signal_id, void *user_data);
+void linvoke_emit(linvoke_s *const linvoke, const linvoke_signal signal_id, void *user_data);
 
 /**
  * @fn linvoke_get_registered_signal_count
@@ -93,14 +93,14 @@ uint32_t linvoke_get_registered_signal_count(linvoke_s *const linvoke);
  * @param signal_id The ID of the signal to which the slots are connected
  * @return The number of slots connected to the signal
  */
-uint32_t linvoke_get_slot_count(linvoke_s *const linvoke, const uint32_t signal_id);
+uint32_t linvoke_get_slot_count(linvoke_s *const linvoke, const linvoke_signal signal_id);
 
 /**
  * @fn linvoke_get_signal_id
  * @brief Get the ID of the signal that emitted an event
  * @return The ID of the signal that emitted an event
  */
-uint32_t linvoke_event_get_signal_id(linvoke_event_s *const event);
+linvoke_signal linvoke_event_get_signal_id(linvoke_event_s *const event);
 
 /**
  * @fn linvoke_event_get_user_data

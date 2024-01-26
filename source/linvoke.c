@@ -44,25 +44,25 @@
  */
 struct linvoke_event_s
 {
-    uint32_t signal_id;
+    linvoke_signal signal_id;
     void *user_data;
 };
 
 /**
- * @struct linvoke_signal_s
+ * @struct linvoke_signal_data_s
  * @brief Structure that holds information about a signal
  * @var id The ID of the signal
  * @var slots An array of pointers to slots that are connected to the signal
  * @var connected_slot_count The number of slots that are currently connected to the signal
  * @var slot_capacity The maximum capacity of the slots array
  */
-struct linvoke_signal_s
+typedef struct linvoke_signal_data_s
 {
-    uint32_t id;
+    linvoke_signal id;
     linvoke_slot_pointer *slots;
     uint32_t connected_slot_count;
     uint32_t slot_capacity;
-};
+} linvoke_signal_data_s;
 
 /**
  * @struct linvoke_s
@@ -73,7 +73,7 @@ struct linvoke_signal_s
  */
 struct linvoke_s
 {
-    linvoke_signal_s *signals;
+    linvoke_signal_data_s *signals;
     uint32_t registered_signal_count;
     uint32_t signal_capacity;
 };
@@ -84,7 +84,7 @@ struct linvoke_s
  * @param signal_id The ID of the signal to find
  * @return A pointer to the signal with the given ID or NULL if no such signal was found
  */
-linvoke_signal_s *linvoke_find_signal(linvoke_s *const linvoke, uint32_t signal_id);
+linvoke_signal_data_s *linvoke_find_signal(linvoke_s *const linvoke, const linvoke_signal signal_id);
 
 linvoke_s *linvoke_create(void)
 {
@@ -122,7 +122,7 @@ void linvoke_destroy(linvoke_s *const linvoke)
     free(linvoke);
 }
 
-void linvoke_register_signal(linvoke_s *const linvoke, uint32_t signal_id)
+void linvoke_register_signal(linvoke_s *const linvoke, const linvoke_signal signal_id)
 {
     // Check if there is an existing signal with the same ID
     if (linvoke_find_signal(linvoke, signal_id) != NULL)
@@ -135,7 +135,7 @@ void linvoke_register_signal(linvoke_s *const linvoke, uint32_t signal_id)
     if (linvoke->registered_signal_count == linvoke->signal_capacity)
     {
         linvoke->signal_capacity += LINVOKE_SIGNAL_ARRAY_BLOCK_SIZE;
-        linvoke_signal_s *reallocated_signals = realloc(linvoke->signals, linvoke->signal_capacity * sizeof(*linvoke->signals));
+        linvoke_signal_data_s *reallocated_signals = realloc(linvoke->signals, linvoke->signal_capacity * sizeof(*linvoke->signals));
 
         if (reallocated_signals == NULL)
         {
@@ -147,7 +147,7 @@ void linvoke_register_signal(linvoke_s *const linvoke, uint32_t signal_id)
     }
 
     // Register the new signal
-    linvoke_signal_s *const signal = &linvoke->signals[linvoke->registered_signal_count];
+    linvoke_signal_data_s *const signal = &linvoke->signals[linvoke->registered_signal_count];
     signal->id = signal_id;
     signal->connected_slot_count = 0;
     signal->slot_capacity = LINVOKE_SLOT_ARRAY_BLOCK_SIZE;
@@ -162,10 +162,10 @@ void linvoke_register_signal(linvoke_s *const linvoke, uint32_t signal_id)
     ++linvoke->registered_signal_count;
 }
 
-void linvoke_connect(linvoke_s *const linvoke, const uint32_t signal_id, linvoke_slot_pointer slot)
+void linvoke_connect(linvoke_s *const linvoke, const linvoke_signal signal_id, linvoke_slot_pointer slot)
 {
     // Find the signal with the given ID
-    linvoke_signal_s *const signal = linvoke_find_signal(linvoke, signal_id);
+    linvoke_signal_data_s *const signal = linvoke_find_signal(linvoke, signal_id);
 
     // Signal not found
     if (signal == NULL)
@@ -206,10 +206,10 @@ void linvoke_connect(linvoke_s *const linvoke, const uint32_t signal_id, linvoke
     ++signal->connected_slot_count;
 }
 
-void linvoke_emit(linvoke_s *const linvoke, const uint32_t signal_id, void *user_data)
+void linvoke_emit(linvoke_s *const linvoke, const linvoke_signal signal_id, void *user_data)
 {
     // Find the signal with the given ID
-    linvoke_signal_s *const signal = linvoke_find_signal(linvoke, signal_id);
+    linvoke_signal_data_s *const signal = linvoke_find_signal(linvoke, signal_id);
 
     // Signal not found
     if (signal == NULL)
@@ -227,7 +227,7 @@ void linvoke_emit(linvoke_s *const linvoke, const uint32_t signal_id, void *user
     }
 }
 
-linvoke_signal_s *linvoke_find_signal(linvoke_s *const linvoke, uint32_t signal_id)
+linvoke_signal_data_s *linvoke_find_signal(linvoke_s *const linvoke, const linvoke_signal signal_id)
 {
     for (uint32_t i = 0; i < linvoke->registered_signal_count; ++i)
     {
@@ -245,10 +245,10 @@ uint32_t linvoke_get_registered_signal_count(linvoke_s *const linvoke)
     return linvoke->registered_signal_count;
 }
 
-uint32_t linvoke_get_slot_count(linvoke_s *const linvoke, const uint32_t signal_id)
+uint32_t linvoke_get_slot_count(linvoke_s *const linvoke, const linvoke_signal signal_id)
 {
     // Find the signal with the given ID
-    linvoke_signal_s *const signal = linvoke_find_signal(linvoke, signal_id);
+    linvoke_signal_data_s *const signal = linvoke_find_signal(linvoke, signal_id);
 
     // Signal not found
     if (signal == NULL)
@@ -260,7 +260,7 @@ uint32_t linvoke_get_slot_count(linvoke_s *const linvoke, const uint32_t signal_
     return signal->connected_slot_count;
 }
 
-uint32_t linvoke_event_get_signal_id(linvoke_event_s *const event)
+linvoke_signal linvoke_event_get_signal_id(linvoke_event_s *const event)
 {
     return event->signal_id;
 }

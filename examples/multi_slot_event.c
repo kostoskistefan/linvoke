@@ -43,7 +43,7 @@ int main(void)
     linvoke_s *linvoke = linvoke_create();
 
     // Define a unique ID for the signal that is going to be registered
-    const uint32_t signal = 1358;
+    const linvoke_signal signal = 1358;
 
     // Register the signal ID
     linvoke_register_signal(linvoke, signal);

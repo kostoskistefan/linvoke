@@ -18,7 +18,7 @@
  */
 void slot(linvoke_event_s *event)
 {
-    const uint32_t signal_id = linvoke_event_get_signal_id(event);
+    const linvoke_signal signal_id = linvoke_event_get_signal_id(event);
     const char *data = *((const char **) linvoke_event_get_user_data(event));
     printf("Signal ID: %u, Data: %s\n", signal_id, data);
 }
@@ -29,7 +29,7 @@ int main(void)
     linvoke_s *linvoke = linvoke_create();
 
     // Define a unique ID for the signal that is going to be registered
-    const uint32_t signal = 123;
+    const linvoke_signal signal = 123;
 
     // Register the signal ID
     linvoke_register_signal(linvoke, signal);
